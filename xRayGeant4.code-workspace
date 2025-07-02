@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "xRayGeant4",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"string": "cpp"
+		}
+	}
+}
