@@ -1,7 +1,0 @@
-{
-	"C_Cpp.default.includePath": [
-		"/Users/ychoi/source/xRayGeant4/inc/**",
-		"/Users/ychoi/source/geant4/install/include/Geant4/**",
-		"/Users/ychoi/source/root/install/include/**"
-	]
-}

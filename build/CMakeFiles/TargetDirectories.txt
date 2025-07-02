@@ -1,6 +1,0 @@
-/Users/ychoi/source/xRayGeant4/build/CMakeFiles/myProject.dir
-/Users/ychoi/source/xRayGeant4/build/CMakeFiles/edit_cache.dir
-/Users/ychoi/source/xRayGeant4/build/CMakeFiles/rebuild_cache.dir
-/Users/ychoi/source/xRayGeant4/build/exe/CMakeFiles/xRayGeant4.dir
-/Users/ychoi/source/xRayGeant4/build/exe/CMakeFiles/edit_cache.dir
-/Users/ychoi/source/xRayGeant4/build/exe/CMakeFiles/rebuild_cache.dir
