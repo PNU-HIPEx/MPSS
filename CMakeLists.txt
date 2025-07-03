@@ -102,4 +102,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 # Add exe subdirectory for executable cpp files
 add_subdirectory(exe)
 
+# Make Data directory
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Data)
+
 # file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})

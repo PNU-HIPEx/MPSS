@@ -16,26 +16,29 @@ public:
 private:
 	G4VPhysicalVolume* mWorld = nullptr;
 	G4VPhysicalVolume* mTungsten = nullptr;
-	G4VPhysicalVolume* mGlass = nullptr;
-	G4VPhysicalVolume* mDetector = nullptr;
+	// G4VPhysicalVolume* mGlass = nullptr;
+	// G4VPhysicalVolume* mDetector = nullptr;
 
 	G4LogicalVolume* mWorldLogical = nullptr;
 	G4LogicalVolume* mTungstenLogical = nullptr;
-	G4LogicalVolume* mGlassLogical = nullptr;
-	G4LogicalVolume* mDetectorLogical = nullptr;
+	// G4LogicalVolume* mGlassLogical = nullptr;
+	// G4LogicalVolume* mDetectorLogical = nullptr;
+
+	std::array<double, 3> mTungstenPosition = {0.0, 0.0, 10.0};
+	std::array<double, 3> mTungstenAngle = {0.0, 0.0, 0.0};
 
 public:
 	G4VPhysicalVolume* Construct() override;
 
 	void getWorld();
 	void getTungsten();
-	void getGlass();
-	void getDetector();
+	// void getGlass();
+	// void getDetector();
 
 	G4LogicalVolume* getWorldLogical() const { return mWorldLogical; }
 	G4LogicalVolume* getTungstenLogical() const { return mTungstenLogical; }
-	G4LogicalVolume* getGlassLogical() const { return mGlassLogical; }
-	G4LogicalVolume* getDetectorLogical() const { return mDetectorLogical; }
+	// G4LogicalVolume* getGlassLogical() const { return mGlassLogical; }
+	// G4LogicalVolume* getDetectorLogical() const { return mDetectorLogical; }
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include "G4String.hh"
 #include "TROOT.h"
+#include "TConfig.h"
 
 class TFile;
 class TTree;
@@ -50,33 +51,6 @@ struct trackTuple {
 	}
 };
 
-struct incidentTuple {
-	Int_t eventID = 0;
-	Int_t trackID = 0;
-	Double_t depositEnergy[3] = {-1, -1, -1};
-	Double_t position[3] = {0, 0, 0};
-	Double_t momentum[3] = {0, 0, 0};
-	Double_t globalTime = 0;
-	Double_t localTime = 0;
-	Double_t kineticEnergy = 0;
-	void init() {
-		eventID = 0;
-		trackID = 0;
-		depositEnergy[0] = -1;
-		depositEnergy[1] = -1;
-		depositEnergy[2] = -1;
-		position[0] = 0;
-		position[1] = 0;
-		position[2] = 0;
-		momentum[0] = 0;
-		momentum[1] = 0;
-		momentum[2] = 0;
-		globalTime = 0;
-		localTime = 0;
-		kineticEnergy = 0;
-	}
-};
-
 struct PARTICLE {
 	enum {
 		unknown = 0,
@@ -91,18 +65,19 @@ struct PARTICLE {
 class TAnalysisManager {
 public:
 	TAnalysisManager();
+	TAnalysisManager(const KEI::TConfigFile& config);
 	~TAnalysisManager();
 
 private:
 	static TAnalysisManager* mInstance;
 
+	KEI::TConfigFile mConfig;
+
 	trackTuple mTrackTuple;
-	incidentTuple mIncidentTuple;
 
 	G4String mFileName;
 	TFile* mFile = nullptr;
 	TTree* mTrackTree = nullptr;
-	TTree* mIncidentTree = nullptr;
 	ProgressBar* mProgressBar = nullptr;
 	std::vector<std::string> mUnknownParticleList;
 
@@ -112,12 +87,10 @@ private:
 	G4LogicalVolume* mTungstenLogical = nullptr;
 	G4LogicalVolume* mGlassLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
-
-	bool isInDetector = false;
 public:
 	static TAnalysisManager* Instance();
 
-	void open(const G4String& name);
+	void open();
 	void close();
 
 	void doBeginOfRun(const G4Run* run);

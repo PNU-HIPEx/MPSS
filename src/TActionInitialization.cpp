@@ -16,9 +16,10 @@ void TActionInitialization::BuildForMaster() const {
 
 void TActionInitialization::Build() const {
 	// In this method, the user can specify the actions that are to be taken by the worker threads.
-	TPrimaryGeneratorAction* primaryGeneratorAction = new TPrimaryGeneratorAction(mConfig);
-	SetUserAction(primaryGeneratorAction);
 
+	TPrimaryGeneratorAction* primaryGeneratorAction = new TPrimaryGeneratorAction(mConfig);
+
+	SetUserAction(primaryGeneratorAction);
 
 	TRunAction* runAction = new TRunAction;
 	SetUserAction(runAction);

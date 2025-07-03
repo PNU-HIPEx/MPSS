@@ -22,6 +22,11 @@ TAnalysisManager::TAnalysisManager() {
 	mInstance = this;
 }
 
+TAnalysisManager::TAnalysisManager(const KEI::TConfigFile& config) : mConfig(config) {
+	mInstance = this;
+	open();
+}
+
 TAnalysisManager::~TAnalysisManager() {
 	close();
 }
@@ -33,14 +38,10 @@ TAnalysisManager* TAnalysisManager::Instance() {
 	return mInstance;
 }
 
-void TAnalysisManager::open(const G4String& name) {
-	mFileName = name;
-	std::filesystem::path path = (std::string) name;
-	static int fileIndex = 0;
-	G4String newPath = path.parent_path().string() + "/" + static_cast<std::string>(path.stem()) + "_" + std::to_string(fileIndex) + static_cast<std::string>(path.extension());
-	fileIndex++;
+void TAnalysisManager::open() {
+	TString outputPath = mConfig.getConfig("FILE").getValue<std::string>("OUTPUT_FILE");
 
-	mFile = new TFile(newPath, "RECREATE");
+	mFile = new TFile(outputPath, "RECREATE");
 	mTrackTree = new TTree("trackTree", "Track Information");
 
 	mTrackTree->Branch("eventID", &mTrackTuple.eventID);
@@ -63,22 +64,6 @@ void TAnalysisManager::open(const G4String& name) {
 	mTrackTree->Branch("finalPZ", &mTrackTuple.finalPZ);
 	mTrackTree->Branch("finalKineticEnergy", &mTrackTuple.finalKineticEnergy);
 	mTrackTree->Branch("finalVolumeID", &mTrackTuple.finalVolumeID);
-
-	mIncidentTree = new TTree("incidentTree", "Incident Information");
-	mIncidentTree->Branch("eventID", &mIncidentTuple.eventID);
-	mIncidentTree->Branch("trackID", &mIncidentTuple.trackID);
-	mIncidentTree->Branch("depositEnergyMetal", &mIncidentTuple.depositEnergy[0]);
-	mIncidentTree->Branch("depositEnergyEpitaxial", &mIncidentTuple.depositEnergy[1]);
-	mIncidentTree->Branch("depositEnergySubstrate", &mIncidentTuple.depositEnergy[2]);
-	mIncidentTree->Branch("x", &mIncidentTuple.position[0]);
-	mIncidentTree->Branch("y", &mIncidentTuple.position[1]);
-	mIncidentTree->Branch("z", &mIncidentTuple.position[2]);
-	mIncidentTree->Branch("px", &mIncidentTuple.momentum[0]);
-	mIncidentTree->Branch("py", &mIncidentTuple.momentum[1]);
-	mIncidentTree->Branch("pz", &mIncidentTuple.momentum[2]);
-	mIncidentTree->Branch("kineticEnergy", &mIncidentTuple.kineticEnergy);
-	mIncidentTree->Branch("globalTime", &mIncidentTuple.globalTime);
-	mIncidentTree->Branch("localTime", &mIncidentTuple.localTime);
 }
 
 Int_t TAnalysisManager::getParticleID(const G4String& particleID) {
@@ -114,17 +99,17 @@ Int_t TAnalysisManager::getVolumeID(const G4LogicalVolume* volume) {
 void TAnalysisManager::close() {
 	mFile->cd();
 	mTrackTree->Write();
-	mIncidentTree->Write();
 	mFile->Close();
 }
 
 void TAnalysisManager::doBeginOfRun(const G4Run* run) {
-	mProgressBar = new ProgressBar(static_cast<int>(run->GetNumberOfEventToBeProcessed()));
+	Int_t nEvent = run->GetNumberOfEventToBeProcessed();
+	// mProgressBar = new ProgressBar(nEvent);
 }
 
 void TAnalysisManager::doEndOfRun(const G4Run* run) {
-	delete mProgressBar;
-	mProgressBar = nullptr;
+	// delete mProgressBar;
+	// mProgressBar = nullptr;
 
 	std::cout << "Unknown particles: ";
 	for ( const std::string& particle : mUnknownParticleList ) {
@@ -134,21 +119,8 @@ void TAnalysisManager::doEndOfRun(const G4Run* run) {
 }
 
 void TAnalysisManager::doBeginOfEvent(const G4Event* event) {
-	mProgressBar->printProgress();
+	// mProgressBar->printProgress();
 	mTrackTuple.eventID = event->GetEventID();
-	static bool isFirstEvent = true;
-	if ( event->GetEventID() % 2580000 == 0 ) {
-		if ( !isFirstEvent ) {
-			mFile->cd();
-			mTrackTree->Write();
-			mIncidentTree->Write();
-			mFile->Close();
-			open(mFileName);
-		} else {
-			isFirstEvent = false;
-			open(mFileName);
-		}
-	}
 }
 
 void TAnalysisManager::doEndOfEvent(const G4Event* event) { }
@@ -156,7 +128,6 @@ void TAnalysisManager::doEndOfEvent(const G4Event* event) { }
 void TAnalysisManager::doPreTracking(const G4Track* track) {
 	Int_t eventID = mTrackTuple.eventID;
 	mTrackTuple.init();
-	mIncidentTuple.init();
 
 	mTrackTuple.eventID = eventID;
 	mTrackTuple.trackID = track->GetTrackID();
@@ -167,13 +138,15 @@ void TAnalysisManager::doPreTracking(const G4Track* track) {
 			mUnknownParticleList.push_back(track->GetDefinition()->GetParticleName());
 		}
 	}
-	isInDetector = false;
 }
 
 void TAnalysisManager::doPostTracking(const G4Track* track) {
 	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
 	if ( mWorldLogical == nullptr ) {
 		mWorldLogical = detectorConstruction->getWorldLogical();
+	}
+	if ( mTungstenLogical == nullptr ) {
+		mTungstenLogical = detectorConstruction->getTungstenLogical();
 	}
 
 	G4ThreeVector vertexPosition = track->GetVertexPosition();
@@ -204,29 +177,9 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 	mTrackTuple.finalVolumeID = getVolumeID(track->GetVolume()->GetLogicalVolume());
 
 	mTrackTree->Fill();
-	if ( isInDetector ) {
-		mIncidentTree->Fill();
-	}
 }
 
-void TAnalysisManager::doStepPhase(const G4Step* step) {
-	G4LogicalVolume* currentVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
-	G4int volumeID = getVolumeID(currentVolume);
-
-	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
-	if ( mTungstenLogical == nullptr ) {
-		mTungstenLogical = detectorConstruction->getTungstenLogical();
-	}
-	if ( mGlassLogical == nullptr ) {
-		mGlassLogical = detectorConstruction->getGlassLogical();
-	}
-	if ( mDetectorLogical == nullptr ) {
-		mDetectorLogical = detectorConstruction->getDetectorLogical();
-	}
-	if ( mWorldLogical == nullptr ) {
-		mWorldLogical = detectorConstruction->getWorldLogical();
-	}
-}
+void TAnalysisManager::doStepPhase(const G4Step* step) { }
 
 void TAnalysisManager::setFileName(const G4String& name) {
 	mFileName = name;

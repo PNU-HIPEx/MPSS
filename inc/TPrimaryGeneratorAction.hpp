@@ -2,11 +2,8 @@
 #define __TPRIMARYGENERATORACTION__
 
 #include "G4VUserPrimaryGeneratorAction.hh"
-// #include "G4GeneralParticleSource.hh"
-// #include "G4ParticleGun.hh"
-// #include "TAnalysisManager.hpp"
 
-// #include<filesystem>
+#include "G4String.hh"
 
 #include "TConfig.h"
 
@@ -22,16 +19,10 @@ private:
 	G4ParticleGun* fParticleGun;
 
 	KEI::TConfigFile mConfig;
-	// G4GeneralParticleSource* fParticleGun;
 
-	struct AlphaEnergyEntry {
-		double energy;
-		double energyUncertainty;
-		double intensity;
-		double intensityUncertainty;
-	};
+	G4String mParticleName;
+	G4double mParticleEnergy;
 
-	std::vector<AlphaEnergyEntry> mAlphaEnergy;
 public:
 	void GeneratePrimaries(G4Event*) override;
 
