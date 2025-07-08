@@ -5,7 +5,7 @@
 
 #include "G4String.hh"
 
-#include "TConfig.h"
+#include "TConfig.hpp"
 
 class G4GeneralParticleSource;
 class G4ParticleGun;

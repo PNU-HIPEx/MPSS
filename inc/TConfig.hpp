@@ -20,13 +20,10 @@
 #include<iostream>
 #include<array>
 #include<sstream>
-#include<type_traits>
-#include<exception>
-#include<algorithm>
-#include<unordered_map>
-
 
 namespace KEI {
+	// This is a part of KEI name space.
+
 	class TDictionary {
 	public:
 		TDictionary(std::string_view key, std::string_view value) : mKey(key), mValue(value) { }
@@ -34,31 +31,49 @@ namespace KEI {
 		std::string mKey;
 		std::string mValue;
 	public:
-		void setValue(std::string_view value) {
-			mValue = value;
-		}
 		std::string getKey() const { return mKey; }
-		template<typename T>
-		T getValue() const {
-			if constexpr ( std::is_same_v<T, int> || std::is_same_v<T, signed> || std::is_same_v < T, signed int> || std::is_same_v<T, int32_t> ) {
+		// This is 
+		template <typename T> static constexpr bool isInterger8() {
+			return std::is_same_v<T, int8_t> || std::is_same_v<T, signed char>;
+		}
+		template <typename T> static constexpr bool isInteger16() {
+			return std::is_same_v<T, int16_t> || std::is_same_v<T, short> || std::is_same_v<T, short int> || std::is_same_v<T, signed short> || std::is_same_v<T, signed short int>;
+		}
+		template <typename T> static constexpr bool isInteger32() {
+			return std::is_same_v<T, int> || std::is_same_v<T, signed> || std::is_same_v < T, signed int> || std::is_same_v<T, int32_t> || std::is_same_v<T, long> || std::is_same_v<T, signed long> || std::is_same_v<T, signed long int>;
+		}
+		template <typename T> static constexpr bool isInteger64() {
+			return std::is_same_v<T, long long> || std::is_same_v<T, signed long long> || std::is_same_v<T, signed long long int> || std::is_same_v<T, int64_t>;
+		}
+		template <typename T> static constexpr bool isUnsignedInteger8() {
+			return std::is_same_v<T, uint8_t> || std::is_same_v<T, unsigned char>;
+		}
+		template <typename T> static constexpr bool isUnsignedInteger16() {
+			return std::is_same_v<T, uint16_t> || std::is_same_v<T, unsigned short> || std::is_same_v<T, unsigned short int>;
+		}
+		template <typename T> static constexpr bool isUnsignedInteger32() {
+			return std::is_same_v<T, unsigned int> || std::is_same_v<T, unsigned> || std::is_same_v<T, uint32_t> || std::is_same_v<T, unsigned long> || std::is_same_v<T, unsigned long int>;
+		}
+		template <typename T> static constexpr bool isUnsignedInteger64() {
+			return std::is_same_v<T, unsigned long long> || std::is_same_v<T, unsigned long long int> || std::is_same_v<T, uint64_t>;
+		}
+
+		template <typename T> T getValue() const {
+			if constexpr ( isInteger32<T>() ) {
 				return std::stoi(mValue);
-			} else if constexpr ( std::is_same_v<T, unsigned int> || std::is_same_v<T, unsigned> || std::is_same_v<T, uint32_t> ) {
+			} else if constexpr ( isUnsignedInteger32<T>() ) {
 				return static_cast<unsigned int>(std::stoul(mValue));
-			} else if constexpr ( std::is_same_v<T, int8_t> || std::is_same_v<T, signed char> ) {
+			} else if constexpr ( isInterger8<T>() ) {
 				return static_cast<int8_t>(mValue.at(0));
-			} else if constexpr ( std::is_same_v<T, uint8_t> || std::is_same_v<T, unsigned char> ) {
+			} else if constexpr ( isUnsignedInteger8<T>() ) {
 				return static_cast<uint8_t>(mValue.at(0));
-			} else if constexpr ( std::is_same_v<T, int16_t> || std::is_same_v<T, short> || std::is_same_v<T, short int> || std::is_same_v<T, signed short> || std::is_same_v<T, signed short int> ) {
+			} else if constexpr ( isInteger16<T>() ) {
 				return static_cast<int16_t>(std::stoi(mValue));
-			} else if constexpr ( std::is_same_v<T, uint16_t> || std::is_same_v<T, unsigned short> || std::is_same_v<T, unsigned short int> ) {
+			} else if constexpr ( isUnsignedInteger16<T>() ) {
 				return static_cast<uint16_t>(std::stoul(mValue));
-			} else if constexpr ( std::is_same_v<T, long> || std::is_same_v<T, signed long> || std::is_same_v<T, signed long int> ) {
-				return static_cast<long>(std::stol(mValue));
-			} else if constexpr ( std::is_same_v<T, unsigned long> || std::is_same_v<T, unsigned long int> ) {
-				return static_cast<unsigned long>(std::stoul(mValue));
-			} else if constexpr ( std::is_same_v<T, long long> || std::is_same_v<T, signed long long> || std::is_same_v<T, signed long long int> || std::is_same_v<T, int64_t> ) {
+			} else if constexpr ( isInteger64<T>() ) {
 				return static_cast<int64_t>(std::stoll(mValue));
-			} else if constexpr ( std::is_same_v<T, unsigned long long> || std::is_same_v<T, unsigned long long int> || std::is_same_v<T, uint64_t> ) {
+			} else if constexpr ( isUnsignedInteger64<T>() ) {
 				return static_cast<uint64_t>(std::stoull(mValue));
 			} else if constexpr ( std::is_same_v<T, bool> ) {
 				if ( mValue == "true" || mValue == "1" || mValue == "True" || mValue == "TRUE" ) {
@@ -75,11 +90,7 @@ namespace KEI {
 			} else if constexpr ( std::is_same_v<T, long double> ) {
 				return static_cast<long double>(std::stold(mValue));
 			} else if constexpr ( std::is_same_v<T, std::string> ) {
-				if ( mValue.at(0) == '"' && mValue.at(mValue.size() - 1) == '"' ) {
-					return mValue.substr(1, mValue.size() - 2);
-				} else {
-					return mValue;
-				}
+				return mValue;
 			} else {
 				static_assert(!std::is_same_v<T, T>, "Unsupported type");
 			}
@@ -92,26 +103,24 @@ namespace KEI {
 			std::istringstream valueList(mValue);
 			std::string value;
 
-			int n = 0;
-			while ( valueList >> value ) {
+			while ( valueList >> value, ' ' ) {
 				if constexpr ( std::is_same_v<T, int> ) {
-					arr[n] = std::stoi(value);
+					arr.push_back(std::stoi(value));
 				} else if constexpr ( std::is_same_v<T, unsigned int> ) {
-					arr[n] = static_cast<unsigned int>(std::stoul(value));
+					arr.push_back(static_cast<unsigned int>(std::stoul(value)));
 				} else if constexpr ( std::is_same_v<T, float> ) {
-					arr[n] = static_cast<float>(std::stof(value));
+					arr.push_back(static_cast<float>(std::stof(value)));
 				} else if constexpr ( std::is_same_v<T, double> ) {
-					arr[n] = static_cast<double>(std::stod(value));
+					arr.push_back(static_cast<double>(std::stod(value)));
 				} else if constexpr ( std::is_same_v<T, long double> ) {
-					arr[n] = static_cast<long double>(std::stold(value));
+					arr.push_back(static_cast<long double>(std::stold(value)));
 				} else if constexpr ( std::is_same_v<T, char> ) {
-					arr[n] = value.at(0);
+					arr.push_back(value.at(0));
 				} else if constexpr ( std::is_same_v<T, std::string> ) {
-					arr[n] = value;
+					arr.push_back(value);
 				} else {
 					static_assert(!std::is_same_v<T, T>, "Unsupported type");
 				}
-				n++;
 			}
 			if ( arr.size() != N ) {
 				throw std::runtime_error("Array size mismatch");
@@ -123,14 +132,6 @@ namespace KEI {
 	class TConfig {
 	public:
 		TConfig(std::string_view title) : mTitle(title) { }
-		TConfig(const TConfig& config) : mTitle(config.mTitle) {
-			for ( const auto& config : config.mConfigSet ) {
-				mConfigSet.push_back(config);
-			}
-			for ( const auto& dict : config.mDictSet ) {
-				mDictSet.push_back(dict);
-			}
-		};
 	private:
 		std::string mTitle;
 		std::vector<TConfig> mConfigSet;
@@ -140,29 +141,7 @@ namespace KEI {
 			mConfigSet.push_back(config);
 		}
 		void addDictionary(const TDictionary& dict) {
-			if ( hasKey(dict.getKey()) ) {
-				for ( auto& existingDict : mDictSet ) {
-					if ( existingDict.getKey() == dict.getKey() ) {
-						existingDict.setValue(dict.getValue<std::string>());
-						return;
-					}
-				}
-			} else {
-				mDictSet.push_back(dict);
-			}
-		}
-		void addDictionary(std::string_view key, std::string_view value) {
-			if ( hasKey(key) ) {
-				for ( auto& existingDict : mDictSet ) {
-					if ( existingDict.getKey() == key ) {
-						existingDict.setValue(value);
-						return;
-					}
-				}
-			} else {
-				TDictionary dict(key, value);
-				mDictSet.push_back(dict);
-			}
+			mDictSet.push_back(dict);
 		}
 
 		std::string getTitle() const { return mTitle; }
@@ -184,22 +163,9 @@ namespace KEI {
 			}
 			throw std::runtime_error("Key not found");
 		}
-		std::vector<std::string> getValueList() const {
-			std::vector<std::string> valueList;
-			for ( const auto& dict : mDictSet ) {
-				valueList.push_back(dict.getValue<std::string>());
-				return valueList;
-			}
-			throw std::runtime_error("Value list not found");
-		}
 		bool hasKey(std::string_view key) const {
 			for ( const auto& dict : mDictSet ) {
 				if ( dict.getKey() == key ) {
-					return true;
-				}
-			}
-			for ( const auto& config : mConfigSet ) {
-				if ( config.getTitle() == key ) {
 					return true;
 				}
 			}
@@ -221,33 +187,13 @@ namespace KEI {
 			}
 			throw std::runtime_error("Dictionary not found");
 		}
-		TConfig modifyConfig(std::string_view title) {
+		TConfig& modifyConfig(std::string_view title) {
 			for ( auto& config : mConfigSet ) {
 				if ( config.mTitle == title ) {
 					return config;
 				}
 			}
 			throw std::runtime_error("Config not found");
-		}
-		std::vector<TConfig> getSubConfigSet() const {
-			return mConfigSet;
-		}
-		std::vector<std::string> getConfigNameSet() const {
-			std::vector<std::string> subConfigNames;
-			for ( const auto& config : mConfigSet ) {
-				subConfigNames.push_back(config.getTitle());
-			}
-			return subConfigNames;
-		}
-		std::string getConfigName() const {
-			return mTitle;
-		}
-		std::unordered_map<std::string, TConfig> getConfigSetWithName() const {
-			std::unordered_map<std::string, TConfig> configMap;
-			for ( const auto& config : mConfigSet ) {
-				configMap.insert_or_assign(config.getTitle(), config);
-			}
-			return configMap;
 		}
 	};
 
@@ -259,7 +205,6 @@ namespace KEI {
 		std::vector<TConfig> mConfigSet;
 	public:
 		TConfigFile() = default;
-		TConfigFile(const TConfigFile& configFile) : mPath(configFile.mPath), mConfigSet(configFile.mConfigSet) { }
 		~TConfigFile() = default;
 
 		TConfigFile(std::filesystem::path path) {
@@ -276,19 +221,6 @@ namespace KEI {
 				std::cerr << "Error: " << e.what() << std::endl;
 				// Handle the error
 			}
-		}
-
-		void addConfig(const TConfig& config) {
-			mConfigSet.push_back(config);
-		}
-
-		bool hasConfig(std::string_view title) const {
-			for ( const auto& config : mConfigSet ) {
-				if ( config.getTitle() == title ) {
-					return true;
-				}
-			}
-			return false;
 		}
 
 		void read() {
@@ -314,6 +246,8 @@ namespace KEI {
 					std::string value = line.substr(line.find('=') + 1);
 					removeFrontBlank(value);
 					removeBackBlank(value);
+					value = isEndComment(value);
+					int nQuote = 0;
 					if ( value.at(0) != '{' ) {
 						if ( subConfig.size() > 0 ) {
 							subConfig.back().addDictionary(TDictionary(key, value));
@@ -335,16 +269,8 @@ namespace KEI {
 
 			}
 		}
-		TConfig& modifyConfig(std::string_view title) {
-			for ( TConfig& config : mConfigSet ) {
-				if ( config.getTitle() == title ) {
-					return config;
-				}
-			}
-			throw std::runtime_error("Config not found");
-		}
 
-		const TConfig& getConfig(std::string_view title) const {
+		TConfig getConfig(std::string_view title) const {
 			for ( const auto& config : mConfigSet ) {
 				if ( config.getTitle() == title ) {
 					return config;
@@ -376,6 +302,24 @@ namespace KEI {
 			}
 		}
 
+		std::string isEndComment(std::string_view line) const {
+			std::string temp = std::string(line);
+			if ( temp.find("#") == std::string::npos ) {
+				return temp;
+			} else {
+				int nQuote = 0;
+				for ( int i = 0; i < temp.size(); i++ ) {
+					if ( temp[i] == '"' ) {
+						nQuote++;
+					}
+					if ( nQuote % 2 == 0 && temp[i] == '#' ) {
+						return temp.substr(0, i - 1);
+					}
+				}
+			}
+			return temp;
+		}
+
 		/**
 		 * @brief Method to test a line is title or not
 		 *
@@ -394,17 +338,6 @@ namespace KEI {
 			} else {
 				return false;
 			}
-		}
-
-		std::vector<TConfig> getConfigSet() const {
-			return mConfigSet;
-		}
-		std::vector<std::string> getConfigNameSet() const {
-			std::vector<std::string> configNameSet;
-			for ( const auto& config : mConfigSet ) {
-				configNameSet.push_back(config.getTitle());
-			}
-			return configNameSet;
 		}
 	};
 }

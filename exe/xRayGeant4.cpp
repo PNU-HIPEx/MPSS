@@ -8,7 +8,7 @@
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 #include "G4UImanager.hh"
-#include "TConfig.h"
+#include "TConfig.hpp"
 
 const std::string configFilePath = "/Users/ychoi/source/xRayGeant4/config/simulation.conf";
 

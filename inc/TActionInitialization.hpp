@@ -3,7 +3,7 @@
 
 #include "G4VUserActionInitialization.hh"
 
-#include "TConfig.h"
+#include "TConfig.hpp"
 
 class TActionInitialization : public G4VUserActionInitialization {
 public:

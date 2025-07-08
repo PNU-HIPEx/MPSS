@@ -3,7 +3,7 @@
 
 #include "G4String.hh"
 #include "TROOT.h"
-#include "TConfig.h"
+#include "TConfig.hpp"
 
 class TFile;
 class TTree;

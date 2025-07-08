@@ -3,7 +3,7 @@
 
 #include "G4VUserDetectorConstruction.hh"
 
-#include "TConfig.h"
+#include "TConfig.hpp"
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
