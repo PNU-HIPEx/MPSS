@@ -66,10 +66,6 @@ endif()
 # Set for doxygen for documentation
 option(BUILD_DOC "Build documentation" OFF)
 
-find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
-message("OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
-
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   set(BUILDINSOURCE true)
 endif()
