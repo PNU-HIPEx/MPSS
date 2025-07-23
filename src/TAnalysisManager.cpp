@@ -104,12 +104,12 @@ void TAnalysisManager::close() {
 
 void TAnalysisManager::doBeginOfRun(const G4Run* run) {
 	Int_t nEvent = run->GetNumberOfEventToBeProcessed();
-	// mProgressBar = new ProgressBar(nEvent);
+	mProgressBar = new ProgressBar(nEvent);
 }
 
 void TAnalysisManager::doEndOfRun(const G4Run* run) {
-	// delete mProgressBar;
-	// mProgressBar = nullptr;
+	delete mProgressBar;
+	mProgressBar = nullptr;
 
 	std::cout << "Unknown particles: ";
 	for ( const std::string& particle : mUnknownParticleList ) {
@@ -119,7 +119,7 @@ void TAnalysisManager::doEndOfRun(const G4Run* run) {
 }
 
 void TAnalysisManager::doBeginOfEvent(const G4Event* event) {
-	// mProgressBar->printProgress();
+	mProgressBar->countUp();
 	mTrackTuple.eventID = event->GetEventID();
 }
 

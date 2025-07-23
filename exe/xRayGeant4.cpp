@@ -53,7 +53,6 @@ int main(int argc, char** argv) {
 	// UI 매니저 초기화
 	// G4UImanager를 사용하여 사용자 인터페이스를 관리합니다.
 	G4UImanager* uiManager = G4UImanager::GetUIpointer();
-
 	// UI 실행기 초기화
 	// G4UIExecutive를 사용하여 명령줄 인터페이스를 설정합니다.
 	G4UIExecutive* ui = new G4UIExecutive(argc, argv);
@@ -73,8 +72,8 @@ int main(int argc, char** argv) {
 		uiManager->ApplyCommand("/event/verbose 0");
 		uiManager->ApplyCommand("/tracking/verbose 0");
 
-		std::string activity = "1000";
-		uiManager->ApplyCommand("/run/beamOn " + activity);
+		int activity = config.getConfig("ENVIRONMENT").getValue<int>("ACTIVITY");
+		uiManager->ApplyCommand("/run/beamOn " + std::to_string(activity));
 
 		// 분석 매니저 종료
 		analysisManager->close();
