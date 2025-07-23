@@ -47,7 +47,17 @@ void TPhysicsList::SetCuts() {
 
 	// Set cuts for tungsten region
 
-	regName = "TungstenRegion";
+	// regName = "TungstenRegion";
+	// region = G4RegionStore::GetInstance()->GetRegion(regName);
+	// cuts = new G4ProductionCuts;
+	// cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("gamma"));
+	// cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("e-"));
+	// cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("e+"));
+	// cuts->SetProductionCut(1 * um, G4ProductionCuts::GetIndex("proton"));
+	// region->SetProductionCuts(cuts);
+
+	// ALPIDE에서 입자가 에너지를 잃어 감마, 전자, 양전자, 양성자를 생성할 때 이차 입자로 새로운 트랙을 만들 것인지 아니면 에너지를 엃고 이차 입자를 만들 지 않을 지 결정할 때 사용하는 값
+	regName = "ALPIDERegion";
 	region = G4RegionStore::GetInstance()->GetRegion(regName);
 	cuts = new G4ProductionCuts;
 	cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("gamma"));

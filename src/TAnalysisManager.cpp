@@ -145,9 +145,6 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 	if ( mWorldLogical == nullptr ) {
 		mWorldLogical = detectorConstruction->getWorldLogical();
 	}
-	if ( mTungstenLogical == nullptr ) {
-		mTungstenLogical = detectorConstruction->getTungstenLogical();
-	}
 
 	G4ThreeVector vertexPosition = track->GetVertexPosition();
 	mTrackTuple.initX = vertexPosition.x();

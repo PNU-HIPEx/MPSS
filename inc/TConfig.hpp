@@ -32,6 +32,7 @@ namespace KEI {
 		std::string mValue;
 	public:
 		std::string getKey() const { return mKey; }
+		void setValue(const std::string& value) { mValue = value; }
 		// This is 
 		template <typename T> static constexpr bool isInterger8() {
 			return std::is_same_v<T, int8_t> || std::is_same_v<T, signed char>;
@@ -96,30 +97,34 @@ namespace KEI {
 			}
 			return T();
 		}
-		template<typename T, int N>
-		std::array<T, N> getValue() const {
+
+		template<typename T, int N> std::array<T, N> getValue() const {
 			static_assert(N > 0, "N must be greater than 0");
 			std::array<T, N> arr;
 			std::istringstream valueList(mValue);
 			std::string value;
-
+			int iValue = 0;
 			while ( valueList >> value, ' ' ) {
 				if constexpr ( std::is_same_v<T, int> ) {
-					arr.push_back(std::stoi(value));
+					arr[iValue] = std::stoi(value);
 				} else if constexpr ( std::is_same_v<T, unsigned int> ) {
-					arr.push_back(static_cast<unsigned int>(std::stoul(value)));
+					arr[iValue] = static_cast<unsigned int>(std::stoul(value));
 				} else if constexpr ( std::is_same_v<T, float> ) {
-					arr.push_back(static_cast<float>(std::stof(value)));
+					arr[iValue] = static_cast<float>(std::stof(value));
 				} else if constexpr ( std::is_same_v<T, double> ) {
-					arr.push_back(static_cast<double>(std::stod(value)));
+					arr[iValue] = static_cast<double>(std::stod(value));
 				} else if constexpr ( std::is_same_v<T, long double> ) {
-					arr.push_back(static_cast<long double>(std::stold(value)));
+					arr[iValue] = static_cast<long double>(std::stold(value));
 				} else if constexpr ( std::is_same_v<T, char> ) {
-					arr.push_back(value.at(0));
+					arr[iValue] = value.at(0);
 				} else if constexpr ( std::is_same_v<T, std::string> ) {
-					arr.push_back(value);
+					arr[iValue] = value;
 				} else {
 					static_assert(!std::is_same_v<T, T>, "Unsupported type");
+				}
+				iValue++;
+				if ( iValue == N ) {
+					break;
 				}
 			}
 			if ( arr.size() != N ) {
@@ -141,7 +146,16 @@ namespace KEI {
 			mConfigSet.push_back(config);
 		}
 		void addDictionary(const TDictionary& dict) {
-			mDictSet.push_back(dict);
+			bool isExist = false;
+			for ( auto& dic : mDictSet ) {
+				if ( dic.getKey() == dict.getKey() ) {
+					dic.setValue(dict.getValue<std::string>());
+					isExist = true;
+				}
+			}
+			if ( !isExist ) {
+				mDictSet.push_back(dict);
+			}
 		}
 
 		std::string getTitle() const { return mTitle; }
@@ -200,12 +214,10 @@ namespace KEI {
 	class TConfigFile {
 	private:
 		std::filesystem::path mPath;
-		std::ifstream mFile;
 
 		std::vector<TConfig> mConfigSet;
 	public:
 		TConfigFile() = default;
-		~TConfigFile() = default;
 
 		TConfigFile(std::filesystem::path path) {
 			try {
@@ -223,8 +235,17 @@ namespace KEI {
 			}
 		}
 
+		bool hasConfig(std::string_view title) const {
+			for ( const auto& config : mConfigSet ) {
+				if ( config.getTitle() == title ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		void read() {
-			mFile.open(mPath);
+			std::ifstream mFile(mPath);
 			if ( !mFile.is_open() ) {
 				throw std::runtime_error("Failed to open file");
 			}
@@ -247,7 +268,7 @@ namespace KEI {
 					removeFrontBlank(value);
 					removeBackBlank(value);
 					value = isEndComment(value);
-					int nQuote = 0;
+					removeQuoteQue(value);
 					if ( value.at(0) != '{' ) {
 						if ( subConfig.size() > 0 ) {
 							subConfig.back().addDictionary(TDictionary(key, value));
@@ -279,6 +300,15 @@ namespace KEI {
 			throw std::runtime_error("Config not found");
 		}
 
+		TConfig& modifyConfig(std::string_view title) {
+			for ( auto& config : mConfigSet ) {
+				if ( config.getTitle() == title ) {
+					return config;
+				}
+			}
+			throw std::runtime_error("Config not found");
+		}
+
 		void removeFrontBlank(std::string& line) {
 			auto it = line.begin();
 			while ( it != line.end() && std::isspace(*it) ) {
@@ -299,6 +329,15 @@ namespace KEI {
 				return true;
 			} else {
 				return false;
+			}
+		}
+
+		void removeQuoteQue(std::string& line) {
+			if ( line.at(0) == '"' ) {
+				line.erase(line.begin());
+			}
+			if ( line.back() == '"' ) {
+				line.pop_back();
 			}
 		}
 
