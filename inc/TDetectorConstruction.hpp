@@ -2,6 +2,7 @@
 #define __TDETECTORCONSTRUCTION__
 
 #include "G4VUserDetectorConstruction.hh"
+#include "G4NistManager.hh"
 
 #include "TConfig.hpp"
 
