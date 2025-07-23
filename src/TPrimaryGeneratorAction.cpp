@@ -20,12 +20,11 @@ TPrimaryGeneratorAction::TPrimaryGeneratorAction() : G4VUserPrimaryGeneratorActi
 
 TPrimaryGeneratorAction::TPrimaryGeneratorAction(const KEI::TConfigFile& config) : G4VUserPrimaryGeneratorAction(), mConfig(config) {
 	fParticleGun = new G4ParticleGun(1);
-
 	G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-	if ( mConfig.getConfig("ENVIRONMENT").getValue<std::string>("SOURCE_PARTICLE") == "alpha" ) {
+	if ( mConfig.getConfig("ENVIRONMENT").getValue<std::string>("PARTICLE_NAME") == "alpha" ) {
 		G4ParticleDefinition* particle = particleTable->FindParticle("alpha");
 		fParticleGun->SetParticleDefinition(particle);
-	} else if ( mConfig.getConfig("ENVIRONMENT").getValue<std::string>("SOURCE_PARTICLE") == "gamma" ) {
+	} else if ( mConfig.getConfig("ENVIRONMENT").getValue<std::string>("PARTICLE_NAME") == "gamma" ) {
 		G4ParticleDefinition* particle = particleTable->FindParticle("gamma");
 		fParticleGun->SetParticleDefinition(particle);
 	} else {
@@ -33,7 +32,7 @@ TPrimaryGeneratorAction::TPrimaryGeneratorAction(const KEI::TConfigFile& config)
 		std::cerr << "Particle could be set in the configuration file with the key SOURCE_PARTICLE.in ENVIRONMENT" << std::endl;
 		exit(1);
 	}
-	setEnergyDistribution(mConfig.getConfig("ENVIRONMENT").getValue<std::string>("SOURCE_PARTICLE"));
+	setEnergyDistribution(mConfig.getConfig("ENVIRONMENT").getValue<std::string>("PARTICLE_NAME"));
 }
 
 TPrimaryGeneratorAction::~TPrimaryGeneratorAction() {
@@ -63,10 +62,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
 	fParticleGun->SetParticleEnergy(selectedEnergy * keV);
 
-	G4double collimatorLength = mConfig.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_LENGTH") * mm;
-	G4double distanceBetweenALPIDEAndCollimator = mConfig.getConfig("ENVIRONMENT").hasKey("DISTANCE_ALPIDE_COLLIMATOR") ? mConfig.getConfig("ENVIRONMENT").getValue<double>("DISTANCE_ALPIDE_COLLIMATOR") * mm : 2. * mm;
-	G4double distanceBetweenSourceAndCollimator = mConfig.getConfig("ENVIRONMENT").hasKey("DISTANCE_SOURCE_COLLIMATOR") ? mConfig.getConfig("ENVIRONMENT").getValue<double>("DISTANCE_SOURCE_COLLIMATOR") * mm : .5 * mm;
-	G4double centerPositionZ = (collimatorLength + distanceBetweenALPIDEAndCollimator + distanceBetweenSourceAndCollimator) * mm;
+	G4double centerPositionZ = 10 * mm;
 	G4double centerPosition[3] = {0, 0, centerPositionZ};
 	G4double radius = mConfig.getConfig("ENVIRONMENT").getValue<double>("SOURCE_RADIUS") * mm;
 

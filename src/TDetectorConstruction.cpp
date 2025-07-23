@@ -10,6 +10,8 @@
 #include "G4Element.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
 
 const G4double AIR_DENSITY = 1.2929e-03 * g / cm3;
 const G4double N_DENSITY = 14.01 * g / mole;
@@ -21,8 +23,7 @@ G4VPhysicalVolume* TDetectorConstruction::Construct() {
 	mNist = G4NistManager::Instance();
 	getWorld();
 	getCollimator();
-	// getGlass();
-	// getDetector();
+	getDetector();
 
 	return mWorld;
 }
@@ -111,7 +112,9 @@ void TDetectorConstruction::getDetector() {
 
 	mDetectorLogical = new G4LogicalVolume(solidDetector, silicon, "ALPIDE");
 
-	mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mDetectorLogical, false, 0, true);
+	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+
+	mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 
 	G4Region* ALPIDERegion = new G4Region("ALPIDERegion");
 	mDetectorLogical->SetRegion(ALPIDERegion);

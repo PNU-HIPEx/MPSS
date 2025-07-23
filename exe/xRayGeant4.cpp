@@ -26,7 +26,6 @@ int main(int argc, char** argv) {
 	// 사용자 정의 지오메트리 설정
 	// TDetectorConstruction 클래스를 사용하여 환경 설정을 초기화합니다.
 	runManager->SetUserInitialization(new TDetectorConstruction(config));
-
 	// 분석 매니저 초기화
 	// TAnalysisManager 클래스를 사용하여 분석 작업을 관리합니다.
 	// 분석 매니저는 시뮬레이션 결과를 저장하고 처리하는 역할을 합니다.
