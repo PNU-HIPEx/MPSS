@@ -10,11 +10,21 @@
 #include "G4UImanager.hh"
 #include "TConfig.hpp"
 #include "config.hpp"
+#include "cppargs.hpp"
 
 const std::filesystem::path sourcePath = SOURCE_DIR;
 const std::string configFilePath = sourcePath / "config/simulation.conf";
 
+ArgumentParser set_parse(int argc, char** argv) {
+	ArgumentParser parser = ArgumentParser(argc, argv).setDescription("Drawing experiment plots");
+	parser.add_argument("--vis").set_default("false").help("Visulaization option").add_finish();
+	parser.parse_args();
+	return parser;
+}
+
 int main(int argc, char** argv) {
+	ArgumentParser parser = set_parse(argc, argv);
+
 	KEI::TConfigFile config(configFilePath);
 
 	// 몬테 카를로 시뮬레이션을 위한 랜덤 엔진 설정
@@ -45,23 +55,27 @@ int main(int argc, char** argv) {
 	// (예: 이벤트 시작, 트래킹 등)을 정의합니다.
 	runManager->SetUserInitialization(new TActionInitialization(config));
 
-	// 시각화 관리자 초기화
-	// G4VisManager를 사용하여 시뮬레이션의 시각화를 설정합니다.
-	G4VisManager* visManager = new G4VisExecutive(argc, argv);
-	visManager->Initialize();
-
 	// UI 매니저 초기화
 	// G4UImanager를 사용하여 사용자 인터페이스를 관리합니다.
 	G4UImanager* uiManager = G4UImanager::GetUIpointer();
-	// UI 실행기 초기화
-	// G4UIExecutive를 사용하여 명령줄 인터페이스를 설정합니다.
-	G4UIExecutive* ui = new G4UIExecutive(argc, argv);
-	std::string visArg = (argc > 1) ? argv[1] : "";
-	if ( visArg == "--vis" ) {
+
+	if ( parser.get_value<bool>("vis") ) {
+		// 시각화 관리자 초기화
+		// G4VisManager를 사용하여 시뮬레이션의 시각화를 설정합니다.
+		G4VisManager* visManager = new G4VisExecutive(argc, argv);
+		visManager->Initialize();
+
+		// UI 실행기 초기화
+		// G4UIExecutive를 사용하여 명령줄 인터페이스를 설정합니다.
+		G4UIExecutive* ui = new G4UIExecutive(argc, argv);
+
 		// 시뮬레이션 초기화 명령 실행
 		uiManager->ApplyCommand("/control/execute init_vis.mac");
 		// UI 세션 시작
 		ui->SessionStart();
+
+		delete ui;
+		delete visManager;
 	} else {
 		// 시뮬레이션 초기화
 		uiManager->ApplyCommand("/run/initialize");
@@ -79,8 +93,6 @@ int main(int argc, char** argv) {
 		analysisManager->close();
 	}
 
-	delete ui;
-	delete visManager;
 	delete runManager;
 
 	return 0;
