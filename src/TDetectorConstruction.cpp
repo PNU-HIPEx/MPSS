@@ -10,7 +10,6 @@
 #include "G4Element.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
-#include "G4NistManager.hh"
 
 const G4double AIR_DENSITY = 1.2929e-03 * g / cm3;
 const G4double N_DENSITY = 14.01 * g / mole;
