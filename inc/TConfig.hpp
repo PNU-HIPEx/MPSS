@@ -20,6 +20,7 @@
 #include<iostream>
 #include<array>
 #include<sstream>
+#include<algorithm>
 
 namespace KEI {
 	// This is a part of KEI name space.
