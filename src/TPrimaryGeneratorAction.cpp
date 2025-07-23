@@ -10,6 +10,14 @@
 
 #include "G4SystemOfUnits.hh"
 
+#include "config.hpp"
+
+const std::filesystem::path sourcePath = SOURCE_DIR;
+
+const std::string amInfoPath = sourcePath / "Config/AM241_ALPHA.csv";
+const std::string gmInfoPath = sourcePath / "Config/AM241_GAMMA.csv";
+
+
 TPrimaryGeneratorAction::TPrimaryGeneratorAction() : G4VUserPrimaryGeneratorAction() {
 	fParticleGun = new G4ParticleGun(1);
 
@@ -93,9 +101,9 @@ const G4ParticleGun* TPrimaryGeneratorAction::GetParticleGun() const {
 void TPrimaryGeneratorAction::setEnergyDistribution(std::string_view particle) {
 	std::string csvPath;
 	if ( particle == "alpha" ) {
-		csvPath = mConfig.getConfig("FILE").getValue<std::string>("ALPHA_ENERGY");
+		csvPath = amInfoPath;
 	} else if ( particle == "gamma" ) {
-		csvPath = mConfig.getConfig("FILE").getValue<std::string>("GAMMA_ENERGY");
+		csvPath = gmInfoPath;
 	} else {
 		std::cerr << "Invalid particle." << std::endl;
 		exit(1);

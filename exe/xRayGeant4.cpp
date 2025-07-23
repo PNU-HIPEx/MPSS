@@ -9,8 +9,10 @@
 #include "G4UIExecutive.hh"
 #include "G4UImanager.hh"
 #include "TConfig.hpp"
+#include "config.hpp"
 
-const std::string configFilePath = "/Users/ychoi/source/xRayGeant4/config/simulation.conf";
+const std::filesystem::path sourcePath = SOURCE_DIR;
+const std::string configFilePath = sourcePath / "Config/simulation.conf";
 
 int main(int argc, char** argv) {
 	KEI::TConfigFile config(configFilePath);

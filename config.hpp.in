@@ -1,0 +1,6 @@
+#ifndef __CONFIG_H_IN__
+
+#define BINARY_DIR "@PROJECT_BINARY_DIR@"
+#define SOURCE_DIR "@CMAKE_SOURCE_DIR@"
+
+#endif

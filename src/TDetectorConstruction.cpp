@@ -98,7 +98,7 @@ void TDetectorConstruction::getCollimator() {
 	// new G4PVPlacement(rotation, position, tubsLogical, "TUBS", mWorldLogical, false, 0, true);
 	// new G4PVPlacement(rotation, position, unionLogical, "UNION", mWorldLogical, false, 0, true);
 	// new G4PVPlacement(rotation, position, subtractionLogical, "SUBTRACTION", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
+	new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
 }
 
 void TDetectorConstruction::getDetector() {
@@ -114,7 +114,7 @@ void TDetectorConstruction::getDetector() {
 
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
-	mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
+	// mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 
 	G4Region* ALPIDERegion = new G4Region("ALPIDERegion");
 	mDetectorLogical->SetRegion(ALPIDERegion);

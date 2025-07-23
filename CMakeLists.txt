@@ -25,6 +25,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+configure_file (config.hpp.in ${CMAKE_SOURCE_DIR}/inc/config.hpp @ONLY)
+
 # Find ROOT package
 find_package(ROOT)
 find_package(ROOT REQUIRED COMPONENTS Core Tree TreePlayer Gpad Hist Physics)
@@ -100,5 +102,5 @@ add_subdirectory(exe)
 
 # Make Data directory
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Data)
-
-# file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Config)
+file(COPY ${CMAKE_SOURCE_DIR}/Config DESTINATION ${CMAKE_BINARY_DIR})
