@@ -3,7 +3,7 @@
 URL 오른쪽에 사각형 두 개가 겹쳐있는 모양의 버튼을 누르면 URL을 확인할 수 있습니다.
 터미널을 켜신 이후 코드를 다운로드 받기 원하는 위치로 이동해주신 후, `git clone`을 해주면 소스 코드를 다운로드 받을 수 있습니다.
 ```
-git clone https://github.com/PNU-HIPEx/xRayGeant4.git
+git clone https://github.com/PNU-HIPEx/MPSS.git
 ```
 
 ## 빌드 및 실행
