@@ -15,18 +15,14 @@ class G4Track;
 class G4Step;
 
 struct trackTuple {
-	Int_t eventID;
-	Int_t trackID;
-	Int_t parentID;
-	Int_t particleID;
-	Double_t initX, initY, initZ;
-	Double_t initPX, initPY, initPZ;
-	Double_t initKineticEnergy;
+	Int_t eventID, trackID, parentID, particleID;
+	Double_t initX, initY, initZ, initPX, initPY, initPZ, initKineticEnergy;
 	Int_t initVolumeID;
-	Double_t finalX, finalY, finalZ;
-	Double_t finalPX, finalPY, finalPZ;
-	Double_t finalKineticEnergy;
+	Double_t finalX, finalY, finalZ, finalPX, finalPY, finalPZ, finalKineticEnergy;
 	Int_t finalVolumeID;
+	Double_t incidentPosition[3], incidentMomentum[3], incidentKineticEnergy;
+	Double_t globalTime, localTime;
+
 	void init() {
 		eventID = 0;
 		trackID = 0;
@@ -87,6 +83,8 @@ private:
 	G4LogicalVolume* mTungstenLogical = nullptr;
 	G4LogicalVolume* mGlassLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
+
+	G4bool isInALPIDE = false;
 public:
 	static TAnalysisManager* Instance();
 

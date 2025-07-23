@@ -60,10 +60,10 @@ void TPhysicsList::SetCuts() {
 	regName = "ALPIDERegion";
 	region = G4RegionStore::GetInstance()->GetRegion(regName);
 	cuts = new G4ProductionCuts;
-	cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("gamma"));
-	cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("e-"));
-	cuts->SetProductionCut(0.1 * um, G4ProductionCuts::GetIndex("e+"));
-	cuts->SetProductionCut(1 * um, G4ProductionCuts::GetIndex("proton"));
+	cuts->SetProductionCut(10 * um, G4ProductionCuts::GetIndex("gamma"));
+	cuts->SetProductionCut(10 * um, G4ProductionCuts::GetIndex("e-"));
+	cuts->SetProductionCut(10 * um, G4ProductionCuts::GetIndex("e+"));
+	cuts->SetProductionCut(10 * um, G4ProductionCuts::GetIndex("proton"));
 	region->SetProductionCuts(cuts);
 }
 

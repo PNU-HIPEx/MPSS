@@ -133,6 +133,8 @@ void TAnalysisManager::doPreTracking(const G4Track* track) {
 	mTrackTuple.trackID = track->GetTrackID();
 	mTrackTuple.parentID = track->GetParentID();
 	mTrackTuple.particleID = getParticleID(track->GetDefinition()->GetParticleName());
+
+	// 발생한 입자가 알파, 중성자, 감마, 전자, 양전자, 양성자가 아닐 때
 	if ( mTrackTuple.particleID == 0 ) {
 		if ( std::find(mUnknownParticleList.begin(), mUnknownParticleList.end(), track->GetDefinition()->GetParticleName()) == mUnknownParticleList.end() ) {
 			mUnknownParticleList.push_back(track->GetDefinition()->GetParticleName());
@@ -176,7 +178,31 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 	mTrackTree->Fill();
 }
 
-void TAnalysisManager::doStepPhase(const G4Step* step) { }
+void TAnalysisManager::doStepPhase(const G4Step* step) {
+	G4LogicalVolume* currentVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+	G4int volumeID = getVolumeID(currentVolume);
+
+	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+	if ( mWorldLogical == nullptr ) {
+		mWorldLogical = detectorConstruction->getWorldLogical();
+	}
+	if ( mDetectorLogical == nullptr ) {
+		mDetectorLogical = detectorConstruction->getDetectorLogical();
+	}
+
+	if ( !isInALPIDE && currentVolume == mDetectorLogical && step->IsFirstStepInVolume() ) {
+		isInALPIDE = true;
+		mTrackTuple.incidentPosition[0] = step->GetPreStepPoint()->GetPosition().x();
+		mTrackTuple.incidentPosition[1] = step->GetPreStepPoint()->GetPosition().y();
+		mTrackTuple.incidentPosition[2] = step->GetPreStepPoint()->GetPosition().z();
+		mTrackTuple.incidentMomentum[0] = step->GetPreStepPoint()->GetMomentum().x();
+		mTrackTuple.incidentMomentum[1] = step->GetPreStepPoint()->GetMomentum().y();
+		mTrackTuple.incidentMomentum[2] = step->GetPreStepPoint()->GetMomentum().z();
+		mTrackTuple.incidentKineticEnergy = step->GetPreStepPoint()->GetKineticEnergy();
+		mTrackTuple.globalTime = step->GetPreStepPoint()->GetGlobalTime();
+		mTrackTuple.localTime = step->GetPreStepPoint()->GetLocalTime();
+	}
+}
 
 void TAnalysisManager::setFileName(const G4String& name) {
 	mFileName = name;
