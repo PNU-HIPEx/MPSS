@@ -22,9 +22,10 @@ make
 ```
 파일을 실행해 주는 데, GUI를 사용하려면
 ```
-./xRayGeant4.out --vis
+./xRayGeant4.out --vis true
 ```
-를, GUI를 사용하려면 다음을 해주면 됩니다.
+를, GUI 없이 시뮬레이션을 실행하기 위해서는
 ```
 ./xRayGeant4.cout
 ```
+를 실행해줍니다.

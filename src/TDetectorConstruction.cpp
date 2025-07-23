@@ -17,7 +17,9 @@ const G4double AIR_DENSITY = 1.2929e-03 * g / cm3;
 const G4double N_DENSITY = 14.01 * g / mole;
 const G4double O_DENSITY = 16.00 * g / mole;
 
-TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() { }
+TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
+	mAirPressure = config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE");
+}
 
 G4VPhysicalVolume* TDetectorConstruction::Construct() {
 	mNist = G4NistManager::Instance();
@@ -35,7 +37,7 @@ void TDetectorConstruction::getWorld() {
 
 	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ);
 
-	G4Material* worldMaterial = new G4Material("worldMaterial", 0.001 * AIR_DENSITY, 2);
+	G4Material* worldMaterial = new G4Material("worldMaterial", mAirPressure * AIR_DENSITY, 2);
 	G4Element* elN = new G4Element("Nitrogen", "N", 7, N_DENSITY);
 	G4Element* elO = new G4Element("Oxygen", "O", 8, O_DENSITY);
 	worldMaterial->AddElement(elN, .7);
@@ -98,7 +100,7 @@ void TDetectorConstruction::getCollimator() {
 	// new G4PVPlacement(rotation, position, tubsLogical, "TUBS", mWorldLogical, false, 0, true);
 	// new G4PVPlacement(rotation, position, unionLogical, "UNION", mWorldLogical, false, 0, true);
 	// new G4PVPlacement(rotation, position, subtractionLogical, "SUBTRACTION", mWorldLogical, false, 0, true);
-	new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
+	// new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
 }
 
 void TDetectorConstruction::getDetector() {
@@ -114,7 +116,7 @@ void TDetectorConstruction::getDetector() {
 
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
-	// mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
+	mDetector = new G4PVPlacement(0, G4ThreeVector(), mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 
 	G4Region* ALPIDERegion = new G4Region("ALPIDERegion");
 	mDetectorLogical->SetRegion(ALPIDERegion);
