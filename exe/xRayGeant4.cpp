@@ -12,7 +12,7 @@
 #include "config.hpp"
 
 const std::filesystem::path sourcePath = SOURCE_DIR;
-const std::string configFilePath = sourcePath / "Config/simulation.conf";
+const std::string configFilePath = sourcePath / "config/simulation.conf";
 
 int main(int argc, char** argv) {
 	KEI::TConfigFile config(configFilePath);

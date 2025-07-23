@@ -14,8 +14,8 @@
 
 const std::filesystem::path sourcePath = SOURCE_DIR;
 
-const std::string amInfoPath = sourcePath / "Config/AM241_ALPHA.csv";
-const std::string gmInfoPath = sourcePath / "Config/AM241_GAMMA.csv";
+const std::string amInfoPath = sourcePath / "config/AM241_ALPHA.csv";
+const std::string gmInfoPath = sourcePath / "config/AM241_GAMMA.csv";
 
 
 TPrimaryGeneratorAction::TPrimaryGeneratorAction() : G4VUserPrimaryGeneratorAction() {
