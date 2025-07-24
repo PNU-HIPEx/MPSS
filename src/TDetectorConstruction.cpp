@@ -12,10 +12,17 @@
 #include "G4PVPlacement.hh"
 #include "G4Colour.hh"
 #include "G4VisAttributes.hh"
+#include "config.hpp"
+#include "CADMesh.hh"
+#include "G4TessellatedSolid.hh"
 
 const G4double AIR_DENSITY = 1.2929e-03 * g / cm3;
 const G4double N_DENSITY = 14.01 * g / mole;
 const G4double O_DENSITY = 16.00 * g / mole;
+
+const std::filesystem::path sourceDir = SOURCE_DIR;
+const std::string collimatorPath = sourceDir / "config/collimator.stl";
+
 
 TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
 	mAirPressure = config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE");
@@ -49,58 +56,23 @@ void TDetectorConstruction::getWorld() {
 }
 
 void TDetectorConstruction::getCollimator() {
-	/*
-		GEANT4에서 사물을 배치하는 방법
-		1. 사물의 형태인 솔리드 볼륨 먼저 제작한다.
-		2. 앞서 제작한 형태에 재질을 추가한 논리 볼륨을 만든다.
-		3. 논리 볼륨에 위치와 방향을 지정하여 물리 볼륨을 배치한다.
-	*/
+	std::cout << collimatorPath << std::endl;
+	auto mesh = CADMesh::TessellatedMesh::FromSTL(collimatorPath);
 
-	// 형태 제작 튜토리얼
-	// G4Box
-	G4double boxX = 10 * mm;
-	G4double boxY = 15 * mm;
-	G4double boxZ = 5 * mm;
-	// 박스를 제작한다. 매개변수는 이름, x 크기의 절반, y 크기의 절반, z 크기의 절반이다.
-	G4Box* solidBox = new G4Box("Box", .5 * boxX, .5 * boxY, .5 * boxZ);
+	auto collimatorSolid = mesh->GetSolid();
 
-	// G4Tubs
-	G4double tubsInnerRadius = 5 * mm;
-	G4double tubsOuterRadius = 10 * mm;
-	G4double tubsHeight = 3 * mm;
-	G4double tubsStartPhiAngle = 45 * deg;
-	G4double tubsAngle = 90 * deg;
+	G4Material* plastic = mNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 
-	// 다라이를 제작한다. 매개변수는 이름, 내경, 외경, 높이의 절반, 시작 각도, 총 각도이다.
-	G4Tubs* solidTubs = new G4Tubs("Tubs", tubsInnerRadius, tubsOuterRadius, .5 * tubsHeight, tubsStartPhiAngle, tubsAngle);
+	mCollimatorLogical = new G4LogicalVolume(collimatorSolid, plastic, "Collimator");
 
-	// 두 솔리드를 합칠 때 사용한다.
-	G4UnionSolid* unionSolid = new G4UnionSolid("UnionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
+	mCollimatorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Gray()));
 
-	// 한 솔리드에서 다른 솔리드를 뺄 때 사용한다.
-	G4SubtractionSolid* subtractionSolid = new G4SubtractionSolid("SubtractionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
+	mCollimator = new G4PVPlacement(0, G4ThreeVector(), mCollimatorLogical, "Collimator", mWorldLogical, false, 0, true);
 
-	// 두 솔리드의 겹치는 부분을 사용한다.
-	G4IntersectionSolid* intersectionSolid = new G4IntersectionSolid("IntersectionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
+	G4Region* collimatorRegion = new G4Region("CollimatorRegion");
+	mCollimatorLogical->SetRegion(collimatorRegion);
+	collimatorRegion->AddRootLogicalVolume(mCollimatorLogical);
 
-	// 알루미늄을 불러온다.
-	G4Material* material = mNist->FindOrBuildMaterial("G4_Al");
-	// 논리 볼륨을 만든다. 매개변수는 솔리드 볼륨, 물질, 이름이다.
-	G4LogicalVolume* boxLogical = new G4LogicalVolume(solidBox, material, "SolidBox");
-	G4LogicalVolume* tubsLogical = new G4LogicalVolume(solidTubs, material, "SolidTubs");
-	G4LogicalVolume* unionLogical = new G4LogicalVolume(unionSolid, material, "UnionSolid");
-	G4LogicalVolume* subtractionLogical = new G4LogicalVolume(subtractionSolid, material, "SubtractionSolid");
-	G4LogicalVolume* intersectionLogical = new G4LogicalVolume(intersectionSolid, material, "IntersectionSolid");
-
-	// 회전과 위치를 지정한다.
-	G4RotationMatrix* rotation = new G4RotationMatrix(0 * deg, 0 * deg, 0 * deg);
-	G4ThreeVector position(0 * mm, 0 * mm, 0 * mm);
-	// 물리 볼륨을 배치한다. 매개변수는 회전, 위치, 로직 볼륨, 이름, 어미 논리 볼륨, 다중 여부, 복제 개수, 겹침 여부이다.
-	// new G4PVPlacement(rotation, position, boxLogical, "BOX", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, tubsLogical, "TUBS", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, unionLogical, "UNION", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, subtractionLogical, "SUBTRACTION", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
 }
 
 void TDetectorConstruction::getDetector() {
