@@ -18,10 +18,14 @@ struct trackTuple {
 	Int_t eventID, trackID, parentID, particleID;
 	Double_t initX, initY, initZ, initPX, initPY, initPZ, initKineticEnergy;
 	Int_t initVolumeID;
+	Double_t inciX, inciY, inciZ, inciPX, inciPY, inciPZ, inciKineticEnergy;
+	Int_t inciVolumeID;
 	Double_t finalX, finalY, finalZ, finalPX, finalPY, finalPZ, finalKineticEnergy;
 	Int_t finalVolumeID;
-	Double_t incidentPosition[3], incidentMomentum[3], incidentKineticEnergy;
-	Double_t globalTime, localTime;
+	Bool_t isInALPIDE; 
+	// 기존 코드
+	// Double_t incidentPosition[3], incidentMomentum[3], incidentKineticEnergy;
+	// Double_t globalTime, localTime;
 
 	void init() {
 		eventID = 0;
@@ -36,6 +40,14 @@ struct trackTuple {
 		initPZ = 0;
 		initKineticEnergy = 0;
 		initVolumeID = 0;
+		inciX = 0;
+		inciY = 0;
+		inciZ = 0;
+		inciPX = 0;
+		inciPY = 0;
+		inciPZ = 0;
+		inciKineticEnergy = 0;
+		inciVolumeID = 0;
 		finalX = 0;
 		finalY = 0;
 		finalZ = 0;
@@ -44,6 +56,7 @@ struct trackTuple {
 		finalPZ = 0;
 		finalKineticEnergy = 0;
 		finalVolumeID = 0;
+		isInALPIDE = false;
 	}
 };
 
@@ -80,9 +93,11 @@ private:
 	Int_t mEventID = 0;
 
 	G4LogicalVolume* mWorldLogical = nullptr;
-	G4LogicalVolume* mTungstenLogical = nullptr;
-	G4LogicalVolume* mGlassLogical = nullptr;
+	// G4LogicalVolume* mTungstenLogical = nullptr;
+	// G4LogicalVolume* mGlassLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
+	G4LogicalVolume* mCollimatorLogical = nullptr;
+	G4LogicalVolume* mShieldLogical =nullptr;
 
 	G4bool isInALPIDE = false;
 public:
