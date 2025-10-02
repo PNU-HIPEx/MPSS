@@ -44,6 +44,7 @@ void TAnalysisManager::open() {
 	mFile = new TFile(outputPath, "RECREATE");
 	mTrackTree = new TTree("trackTree", "Track Information");
 
+	// values initial
 	mTrackTree->Branch("eventID", &mTrackTuple.eventID);
 	mTrackTree->Branch("trackID", &mTrackTuple.trackID);
 	mTrackTree->Branch("parentID", &mTrackTuple.parentID);
@@ -54,8 +55,21 @@ void TAnalysisManager::open() {
 	mTrackTree->Branch("initPX", &mTrackTuple.initPX);
 	mTrackTree->Branch("initPY", &mTrackTuple.initPY);
 	mTrackTree->Branch("initPZ", &mTrackTuple.initPZ);
+
+	// values incident
+	mTrackTree->Branch("isInALPIDE", &mTrackTuple.isInALPIDE);
 	mTrackTree->Branch("initKineticEnergy", &mTrackTuple.initKineticEnergy);
 	mTrackTree->Branch("initVolumeID", &mTrackTuple.initVolumeID);
+	mTrackTree->Branch("inciX", &mTrackTuple.inciX);
+	mTrackTree->Branch("inciY", &mTrackTuple.inciY);
+	mTrackTree->Branch("inciZ", &mTrackTuple.inciZ);
+	mTrackTree->Branch("inciPX", &mTrackTuple.inciPX);
+	mTrackTree->Branch("inciPY", &mTrackTuple.inciPY);
+	mTrackTree->Branch("inciPZ", &mTrackTuple.inciPZ);
+	mTrackTree->Branch("inciKineticEnergy", &mTrackTuple.initKineticEnergy);
+	mTrackTree->Branch("inciVolumeID", &mTrackTuple.initVolumeID);
+
+	// values final
 	mTrackTree->Branch("finalX", &mTrackTuple.finalX);
 	mTrackTree->Branch("finalY", &mTrackTuple.finalY);
 	mTrackTree->Branch("finalZ", &mTrackTuple.finalZ);
@@ -64,6 +78,7 @@ void TAnalysisManager::open() {
 	mTrackTree->Branch("finalPZ", &mTrackTuple.finalPZ);
 	mTrackTree->Branch("finalKineticEnergy", &mTrackTuple.finalKineticEnergy);
 	mTrackTree->Branch("finalVolumeID", &mTrackTuple.finalVolumeID);
+
 }
 
 Int_t TAnalysisManager::getParticleID(const G4String& particleID) {
@@ -82,19 +97,44 @@ Int_t TAnalysisManager::getParticleID(const G4String& particleID) {
 	}
 }
 
+// Int_t TAnalysisManager::getVolumeID(const G4LogicalVolume* volume) {
+// 	if ( volume == mWorldLogical ) {
+// 		return 1;
+// 	} else if ( volume == mTungstenLogical ) {
+// 		return 2;
+// 	} else if ( volume == mGlassLogical ) {
+// 		return 3;
+// 	} else if ( volume == mDetectorLogical ) {
+// 		return 4;
+// 	} else {
+// 		return 0;
+// 	}
+// }
+
 Int_t TAnalysisManager::getVolumeID(const G4LogicalVolume* volume) {
-	if ( volume == mWorldLogical ) {
+	if ( volume == mWorldLogical ) 
+	{
 		return 1;
-	} else if ( volume == mTungstenLogical ) {
+	} 
+	else if ( volume == mDetectorLogical ) 
+	{
 		return 2;
-	} else if ( volume == mGlassLogical ) {
+	} 
+	else if ( volume == mCollimatorLogical ) 
+	{
 		return 3;
-	} else if ( volume == mDetectorLogical ) {
+	}
+	else if ( volume == mShieldLogical )
+	{
 		return 4;
-	} else {
+	} 
+	else 
+	{
 		return 0;
 	}
 }
+
+
 
 void TAnalysisManager::close() {
 	mFile->cd();
@@ -140,6 +180,7 @@ void TAnalysisManager::doPreTracking(const G4Track* track) {
 			mUnknownParticleList.push_back(track->GetDefinition()->GetParticleName());
 		}
 	}
+	isInALPIDE = false;
 }
 
 void TAnalysisManager::doPostTracking(const G4Track* track) {
@@ -147,7 +188,11 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 	if ( mWorldLogical == nullptr ) {
 		mWorldLogical = detectorConstruction->getWorldLogical();
 	}
+	if ( mCollimatorLogical == nullptr ) {
+		mCollimatorLogical = detectorConstruction->getCollimatorLogical();
+	}
 
+	// values_initial
 	G4ThreeVector vertexPosition = track->GetVertexPosition();
 	mTrackTuple.initX = vertexPosition.x();
 	mTrackTuple.initY = vertexPosition.y();
@@ -161,6 +206,7 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 	mTrackTuple.initKineticEnergy = track->GetVertexKineticEnergy();
 	mTrackTuple.initVolumeID = getVolumeID(track->GetOriginTouchableHandle()->GetVolume()->GetLogicalVolume());
 
+	// values_final
 	G4ThreeVector finalPosition = track->GetPosition();
 	mTrackTuple.finalX = finalPosition.x();
 	mTrackTuple.finalY = finalPosition.y();
@@ -179,8 +225,8 @@ void TAnalysisManager::doPostTracking(const G4Track* track) {
 }
 
 void TAnalysisManager::doStepPhase(const G4Step* step) {
-	G4LogicalVolume* currentVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
-	G4int volumeID = getVolumeID(currentVolume);
+	G4LogicalVolume* preVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+	G4int volumeID = getVolumeID(preVolume);
 
 	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
 	if ( mWorldLogical == nullptr ) {
@@ -189,20 +235,52 @@ void TAnalysisManager::doStepPhase(const G4Step* step) {
 	if ( mDetectorLogical == nullptr ) {
 		mDetectorLogical = detectorConstruction->getDetectorLogical();
 	}
-
-	if ( !isInALPIDE && currentVolume == mDetectorLogical && step->IsFirstStepInVolume() ) {
-		isInALPIDE = true;
-		mTrackTuple.incidentPosition[0] = step->GetPreStepPoint()->GetPosition().x();
-		mTrackTuple.incidentPosition[1] = step->GetPreStepPoint()->GetPosition().y();
-		mTrackTuple.incidentPosition[2] = step->GetPreStepPoint()->GetPosition().z();
-		mTrackTuple.incidentMomentum[0] = step->GetPreStepPoint()->GetMomentum().x();
-		mTrackTuple.incidentMomentum[1] = step->GetPreStepPoint()->GetMomentum().y();
-		mTrackTuple.incidentMomentum[2] = step->GetPreStepPoint()->GetMomentum().z();
-		mTrackTuple.incidentKineticEnergy = step->GetPreStepPoint()->GetKineticEnergy();
-		mTrackTuple.globalTime = step->GetPreStepPoint()->GetGlobalTime();
-		mTrackTuple.localTime = step->GetPreStepPoint()->GetLocalTime();
+	if ( mCollimatorLogical == nullptr ) {
+		mCollimatorLogical = detectorConstruction->getCollimatorLogical();
 	}
+	// Detector에서 생성되는 secondary에 대한 고려가 필요함.
+	if ( !isInALPIDE && preVolume == mDetectorLogical && step->IsFirstStepInVolume() ) {
+		// values_incident
+		isInALPIDE = true;
+		mTrackTuple.isInALPIDE = true;
+		mTrackTuple.inciX = step->GetPreStepPoint()->GetPosition().x();
+		mTrackTuple.inciY = step->GetPreStepPoint()->GetPosition().y();
+		mTrackTuple.inciZ = step->GetPreStepPoint()->GetPosition().z();
+		mTrackTuple.inciPX = step->GetPreStepPoint()->GetMomentum().x();
+		mTrackTuple.inciPY = step->GetPreStepPoint()->GetMomentum().y();
+		mTrackTuple.inciPZ = step->GetPreStepPoint()->GetMomentum().z();
+		mTrackTuple.inciKineticEnergy = step->GetPreStepPoint()->GetKineticEnergy();
+		mTrackTuple.inciVolumeID = getVolumeID(preVolume);
+		// mTrackTuple.globalTime = step->GetPreStepPoint()->GetGlobalTime();
+		// mTrackTuple.localTime = step->GetPreStepPoint()->GetLocalTime();
+	}
+
+
+
+	// if ( !isInALPIDE && currentVolume == mDetectorLogical && step->IsFirstStepInVolume() ) {
+	// 	isInALPIDE = true;
+	// 	mTrackTuple.inciX = step->GetPreStepPoint()->GetPosition().x();
+	// 	mTrackTuple.inciY = step->GetPreStepPoint()->GetPosition().y();
+	// 	mTrackTuple.inciZ = step->GetPreStepPoint()->GetPosition().z();
+	// 	mTrackTuple.inciPX = step->GetPreStepPoint()->GetMomentum().x();
+	// 	mTrackTuple.inciPY = step->GetPreStepPoint()->GetMomentum().y();
+	// 	mTrackTuple.inciPZ = step->GetPreStepPoint()->GetMomentum().z();
+	// 	mTrackTuple.inciKineticEnergy = step->GetPreStepPoint()->GetKineticEnergy();
+	// 	mTrackTuple.inciVolumeID = getVolumeID(currentVolume);
+	// 	// mTrackTuple.globalTime = step->GetPreStepPoint()->GetGlobalTime();
+	// 	// mTrackTuple.localTime = step->GetPreStepPoint()->GetLocalTime();
+	// }
 }
+
+// if (inciVolumeID == 2 && finalVolumeID == 1) {
+//     // 검출기에서 나간 입자
+// }
+
+// if (inciVolumeID == 3 && finalVolumeID == 2) {
+//     // 콜리메이터를 통과해서 검출기에 도달한 입자
+// }
+
+
 
 void TAnalysisManager::setFileName(const G4String& name) {
 	mFileName = name;
