@@ -22,6 +22,10 @@ const G4double C_mass = 12.01 * g / mole;
 const G4double H_mass = 1.008 * g / mole;
 
 
+const std::filesystem::path sourceDir = SOURCE_DIR;
+const std::string collimatorPath = sourceDir / "config/collimator.stl";
+
+
 TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
 	mAirPressure = config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE");
 }
