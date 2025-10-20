@@ -14,6 +14,8 @@
 #include "G4VisAttributes.hh"
 #include "map"
 
+#include "config.hpp"
+
 const G4double AIR_DENSITY = 1.2929e-03 * g / cm3;
 const G4double N_mass = 14.01 * g / mole;
 const G4double O_mass = 16.00 * g / mole;
@@ -250,7 +252,7 @@ void TDetectorConstruction::getCollimator() {
 
 	G4RotationMatrix* rot_collimator = new G4RotationMatrix(0 * deg, 0 * deg, 0 * deg);
 	G4ThreeVector pos_collimator(0 * mm, 0 * mm, 0 * mm);
-	new G4PVPlacement(rot_collimator, pos_collimator, mCollimatorLogical, "test", mWorldLogical, false, 0, true);
+	new G4PVPlacement(rot_collimator, pos_collimator, mCollimatorLogical, "Collimator", mWorldLogical, false, 0, true);
 
 
 
