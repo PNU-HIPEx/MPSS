@@ -8,8 +8,7 @@
 TEventAction::TEventAction(TRunAction* runAction) : G4UserEventAction(), fRunAction(runAction) { }
 
 void TEventAction::BeginOfEventAction(const G4Event* event) {
-	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-	analysisManager->FillNtupleIColumn(0, event->GetEventID());
+	ProgressBar::incrementGlobal();
 }
 
 void TEventAction::EndOfEventAction(const G4Event* event) {

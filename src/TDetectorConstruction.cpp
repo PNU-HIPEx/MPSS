@@ -29,7 +29,8 @@ const std::string collimatorPath = sourceDir / "config/collimator.stl";
 
 
 TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
-	mAirPressure = config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE");
+	mAirPressure = config.getConfig("ENVIRONMENT").hasKey("AIR_PRESSURE") ? config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE") : 1.;
+	mCollimatorMaterial = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? config.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
 }
 
 G4VPhysicalVolume* TDetectorConstruction::Construct() {
@@ -46,9 +47,8 @@ void TDetectorConstruction::getWorld() {
 	G4double worldX = 50 * mm;
 	G4double worldY = 50 * mm;
 	G4double worldZ = 35 * mm;
-	// G4double worldZ = 50 * mm;
 
-	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ); // 중심에서 부터의 거리라서 원하는 길이에서 0.5를 곱해주어야 함.
+	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ); 
 
 	G4Material* worldMaterial = new G4Material("worldMaterial", mAirPressure * AIR_DENSITY, 2);
 	G4Element* elN = new G4Element("Nitrogen", "N", 7, N_mass);
@@ -63,24 +63,6 @@ void TDetectorConstruction::getWorld() {
 
 
 void TDetectorConstruction::getCollimator() {
-	/*
-		GEANT4에서 사물을 배치하는 방법
-		1. 사물의 형태인 솔리드 볼륨 먼저 제작한다. (G4Solid)
-		솔리드 볼륨 : 형태, 기하학적 정보만 정의된 상태, G4Box, G4Tubs, G4Sphere등 G4 자체적으로 정의된 class를 사용
-		
-		2. 앞서 제작한 형태에 재질을 추가한 논리 볼륨을 만든다. (G4LogicalVolume)
-		// 로직 볼륨 : 솔리드 볼륨에 물질과 속성(색상, 민감도??)를 부여함. 아직 물리적으로 배치되지 않음 = 월드에 없음
-		계층구조상 어미 또는 자식을 가질 수 있다...
-
-		3. 논리 볼륨에 위치와 방향을 지정하여 물리 볼륨을 배치한다. (G4PVPlacement)
-		// 로직 볼륨에 좌표와 방향을 결정하여 실제 시뮬레이션 공간에 배치
-
-	*/
-
-	// 형태 제작 튜토리얼
-	
-	// 솔리드 볼륨 제작
-	// G4Box_1 : 작은 방사선원 끼우는 곳 -> 큰박스
 	G4double X_BoxSmallSource = 30 * mm;
 	G4double Y_BoxSmallSource = 17 * mm;
 	G4double Z_BoxSmallSource = 15 * mm;
@@ -230,75 +212,38 @@ void TDetectorConstruction::getCollimator() {
 
 	G4VSolid* solid_collimator = collimatorMap[{bigSourceAperture, SmallSourceAperture}];
 
+	G4Material* collimatorMaterial;
+	if ( mCollimatorMaterial == "PLA" ) {
+		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
+		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
+		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
+		collimatorMaterial = new G4Material("PLA", 1.25 * g/cm3, 3);
+		collimatorMaterial->AddElement(el_C, 3);
+		collimatorMaterial->AddElement(el_H, 4);
+		collimatorMaterial->AddElement(el_O, 2);
+	} else if ( mCollimatorMaterial == "AL" ) {
+		collimatorMaterial = mNist->FindOrBuildMaterial("G4_Al");
+	} else {
+		G4cerr << "Unknown collimator material: " << mCollimatorMaterial << "." << G4endl;
+		exit(1);
+	}
 	// 로직 볼륨
 	// 3D printer 필라멘트 (PLA)
-	G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
-	G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
-	G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-
-	G4Material* ma_PLA = new G4Material("PLA", 1.25 * g/cm3, 3);
-
-	ma_PLA->AddElement(el_C, 3);
-	ma_PLA->AddElement(el_H, 4);
-	ma_PLA->AddElement(el_O, 2);
 
 
-	G4Material* ma_Al = mNist->FindOrBuildMaterial("G4_Al");
 	G4String name = "logic_" + std::to_string(bigSourceAperture) + "_" + std::to_string(SmallSourceAperture);
 	
 	// 이렇게 Logical Volume을 정의하면 클래스 멤버와 무관한 지역 변수를 선언하는 것이어서 TAnalysisManager에서 불러오는 mCollimatorLogical에는 여전히 mullptr이 들어가게 됨..
 	// G4LogicalVolume* mCollimatorLogical = new G4LogicalVolume(solid_collimator, ma_PLA, name);
-	mCollimatorLogical = new G4LogicalVolume(solid_collimator, ma_PLA, name);
+	mCollimatorLogical = new G4LogicalVolume(solid_collimator, collimatorMaterial, name);
 
 	G4RotationMatrix* rot_collimator = new G4RotationMatrix(0 * deg, 0 * deg, 0 * deg);
 	G4ThreeVector pos_collimator(0 * mm, 0 * mm, 0 * mm);
 	new G4PVPlacement(rot_collimator, pos_collimator, mCollimatorLogical, "Collimator", mWorldLogical, false, 0, true);
 
-
-
-	// 쉴드 설치 및 제거
-
-
-	// 한 솔리드에서 다른 솔리드를 뺄 때 사용한다.
-	// 빼는 도형의 위치와 회전을 결정할 수 있음.
-
-
-	// examples //
-	// G4SubtractionSolid* subtractionSolid = new G4SubtractionSolid("SubtractionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
-	// G4IntersectionSolid* intersectionSolid = new G4IntersectionSolid("IntersectionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
-	// G4UnionSolid* unionSolid = new G4UnionSolid("UnionSolid", solidBox, solidTubs, 0, G4ThreeVector(0, 0, 0));
-
-	// 논리 볼륨을 만든다. 매개변수는 솔리드 볼륨, 물질, 이름이다.
-	// 알루미늄을 불러온다.
-	// G4Material* Al = mNist->FindOrBuildMaterial("G4_Al");
-	// G4LogicalVolume* test = new G4LogicalVolume(SubBigAperture4SmallSource, Al, "test");
-
-
-	// examples //
-	// G4LogicalVolume* boxLogical = new G4LogicalVolume(solidBox, material, "SolidBox");
-	// G4LogicalVolume* tubsLogical = new G4LogicalVolume(solidTubs, material, "SolidTubs");
-	// G4LogicalVolume* unionLogical = new G4LogicalVolume(unionSolid, material, "UnionSolid");
-	// G4LogicalVolume* subtractionLogical = new G4LogicalVolume(solid_BoxSubTubs1, material, "SubtractionSolid");
-	// G4LogicalVolume* intersectionLogical = new G4LogicalVolume(intersectionSolid, material, "IntersectionSolid");
-
-
-	// 물리 볼륨을 배치한다. 매개변수는 회전, 위치, 로직 볼륨, 이름, 어미 논리 볼륨, 다중 여부, 복제 개수, 겹침 여부이다.
-	// 회전
-	// G4RotationMatrix* rot_test = new G4RotationMatrix(0 * deg, 0 * deg, 0 * deg);
-
-	// 위치
-	// G4ThreeVector pos_test(0 * mm, 0 * mm, 0 * mm);
-
-	// new G4PVPlacement(rot_test, pos_test, test, "test", mWorldLogical, false, 0, true);	
-	
-
-	// examples //
-	// new G4PVPlacement(rotation, position, boxLogical, "BOX", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation_tubs, position_tubs, tubsLogical, "TUBS", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, unionLogical, "UNION", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation1, position1, subtractionLogical, "SUBTRACTION", mWorldLogical, false, 0, true);
-	// new G4PVPlacement(rotation, position, intersectionLogical, "INTERSECTION", mWorldLogical, false, 0, true);
-
+	G4Region* collimatorRegion = new G4Region("CollimatorRegion");
+	mCollimatorLogical->SetRegion(collimatorRegion);
+	collimatorRegion->AddRootLogicalVolume(mCollimatorLogical);
 }
 
 void TDetectorConstruction::getShield() {
@@ -308,27 +253,24 @@ void TDetectorConstruction::getShield() {
 	G4double StartAngle = 0 * deg;
 	G4double EndAngle = 360 * deg;
 
-	// G4double InnerRadius = 0 * mm;
-	// G4double Height_tubsSource = 3 * mm;
-	// G4double StartAngle_tubsSources = 0 * deg;
-	// G4double EndAngle_tubsSources = 360 * deg;
-
 	G4Tubs* solidShield = new G4Tubs("Tubs", InnerRadius, OuterRadius, .5 * Height, StartAngle, EndAngle);
 
-	// 로직 볼륨
-	// 3D printer 필라멘트 (PLA)
-	G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
-	G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
-	G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-
-	G4Material* ma_PLA = new G4Material("PLA", 1.25 * g/cm3, 3);
-
-	ma_PLA->AddElement(el_C, 3);
-	ma_PLA->AddElement(el_H, 4);
-	ma_PLA->AddElement(el_O, 2);
-
-	mShieldLogical = new G4LogicalVolume(solidShield,ma_PLA,"Shield");
-
+	G4Material* collimatorMaterial;
+	if ( mCollimatorMaterial == "PLA" ) {
+		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
+		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
+		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
+		collimatorMaterial = new G4Material("PLA", 1.25 * g/cm3, 3);
+		collimatorMaterial->AddElement(el_C, 3);
+		collimatorMaterial->AddElement(el_H, 4);
+		collimatorMaterial->AddElement(el_O, 2);
+	} else if ( mCollimatorMaterial == "AL" ) {
+		collimatorMaterial = mNist->FindOrBuildMaterial("G4_Al");
+	} else {
+		G4cerr << "Unknown collimator material: " << mCollimatorMaterial << "." << G4endl;
+		exit(1);
+	}
+	mShieldLogical = new G4LogicalVolume(solidShield, collimatorMaterial,"Shield");
 }
 
 void TDetectorConstruction::getDetector() {

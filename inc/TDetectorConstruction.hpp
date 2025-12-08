@@ -18,6 +18,7 @@ private:
 	G4NistManager* mNist;
 
 	G4double mAirPressure = 1.;
+	G4String mCollimatorMaterial = "PLA";
 
 	G4VPhysicalVolume* mWorld = nullptr;
 	G4VPhysicalVolume* mCollimator = nullptr;

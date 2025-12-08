@@ -1,15 +1,16 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <chrono>
 
 #include "Randomize.hh"
-#include "G4RunManager.hh"
+#include "G4MTRunManager.hh"
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 #include "G4UImanager.hh"
+#include "G4AnalysisManager.hh"
 
 #include "TDetectorConstruction.hpp"
-#include "TAnalysisManager.hpp"
 #include "TPhysicsList.hpp"
 #include "TActionInitialization.hpp"
 
@@ -23,6 +24,7 @@ const std::string configFilePath = sourcePath / "config/simulation.conf";
 ArgumentParser set_parse(int argc, char** argv) {
 	ArgumentParser parser = ArgumentParser(argc, argv).setDescription("Drawing experiment plots");
 	parser.add_argument("--vis").set_default("false").help("Visulaization option").add_finish();
+	parser.add_argument("--threads").set_default("4").help("Number of threads for Geant4 MT").add_finish();
 
 	parser.parse_args();
 
@@ -30,6 +32,7 @@ ArgumentParser set_parse(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 	// 인자 파싱
 	ArgumentParser parser = set_parse(argc, argv);
 	// 컨피그 파일 열기
@@ -37,23 +40,22 @@ int main(int argc, char** argv) {
 
 	// 몬테 카를로 시뮬레이션을 위한 랜덤 엔진 설정
 	// CLHEP 라이브러리의 RanecuEngine을 사용하여 랜덤 엔진을 초기화합니다.
-	long randomSeedNum = config.getConfig("FILE").getValue<long>("RANDOM_SEED");
+	long randomSeedNum = config.getConfig("CONFIG").getValue<long>("RANDOM_SEED");
 	CLHEP::RanecuEngine* RandomEngine = new CLHEP::RanecuEngine;
 	G4Random::setTheEngine(RandomEngine);
 	G4Random::setTheSeed(randomSeedNum);
 
 	// G4RunManager를 생성
-	G4RunManager* runManager = new G4RunManager;
+	G4MTRunManager* runManager = new G4MTRunManager;
+
+	int nThreads = parser.get_value<int>("threads");
+    runManager->SetNumberOfThreads(nThreads);
 
 	// 사용자 정의 지오메트리 설정
 	runManager->SetUserInitialization(new TDetectorConstruction(config));
-	
-	// 분석 매니저 초기화
-	// TAnalysisManager 클래스를 사용하여 분석 작업을 관리합니다.
-	// TAnalysisManager* analysisManager = new TAnalysisManager(config);
 
 	// 물리학 리스트 설정
-	TPhysicsList* physicsList = new TPhysicsList;
+	TPhysicsList* physicsList = new TPhysicsList(config);
 	runManager->SetVerboseLevel(0); // 물리학 리스트의 정보 출력 레벨 설정
 	runManager->SetUserInitialization(physicsList);
 
@@ -83,12 +85,12 @@ int main(int argc, char** argv) {
 	} else {
 		// 시뮬레이션 초기화
 		uiManager->ApplyCommand("/run/initialize");
-
+		std::array<int, 4> verboseLevels = config.getConfig("CONFIG").getValue<int,4>("VERBOSE");
 		// 시뮬레이션 설정
-		uiManager->ApplyCommand("/control/verbose 1");
-		uiManager->ApplyCommand("/run/verbose 1");
-		uiManager->ApplyCommand("/event/verbose 0");
-		uiManager->ApplyCommand("/tracking/verbose 0");
+		uiManager->ApplyCommand("/control/verbose " + std::to_string(verboseLevels[0]));
+		uiManager->ApplyCommand("/run/verbose " + std::to_string(verboseLevels[1]));
+		uiManager->ApplyCommand("/event/verbose " + std::to_string(verboseLevels[2]));
+		uiManager->ApplyCommand("/tracking/verbose " + std::to_string(verboseLevels[3]));
 
 		int activity = config.getConfig("ENVIRONMENT").getValue<int>("ACTIVITY");
 		uiManager->ApplyCommand("/run/beamOn " + std::to_string(activity));
@@ -96,5 +98,8 @@ int main(int argc, char** argv) {
 
 	delete runManager;
 
+	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	std::chrono::duration<double> duration = end - start;
+	std::cout << "Simulation time: " << duration.count() << "s" << std::endl;
 	return 0;
 }

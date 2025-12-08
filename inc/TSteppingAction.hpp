@@ -16,7 +16,6 @@ private:
 	G4LogicalVolume* mWorldLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
 	G4LogicalVolume* mCollimatorLogical = nullptr;
-	G4LogicalVolume* mShieldLogical =nullptr;
 public:
 	void UserSteppingAction(const G4Step*) override;
 };

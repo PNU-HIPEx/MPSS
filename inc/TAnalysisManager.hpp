@@ -1,123 +1,32 @@
 #ifndef __TANALYSISMANAGER__
 #define __TANALYSISMANAGER__
 
-#include "G4String.hh"
-#include "TROOT.h"
+#include<filesystem>
+#include<vector>
+#include<string>
+#include<unordered_map>
+
+#include "TFile.h"
+#include "TH1.h"
+#include "TH2.h"
+
 #include "TConfig.hpp"
 
-class TFile;
-class TTree;
-class ProgressBar;
-class G4LogicalVolume;
-class G4Run;
-class G4Event;
-class G4Track;
-class G4Step;
-
-struct trackTuple {
-	Int_t eventID, trackID, parentID, particleID;
-	Double_t initX, initY, initZ, initPX, initPY, initPZ, initKineticEnergy;
-	Int_t initVolumeID;
-	Double_t inciX, inciY, inciZ, inciPX, inciPY, inciPZ, inciKineticEnergy;
-	Int_t inciVolumeID;
-	Double_t finalX, finalY, finalZ, finalPX, finalPY, finalPZ, finalKineticEnergy;
-	Int_t finalVolumeID;
-	Bool_t isInALPIDE; 
-	// 기존 코드
-	// Double_t incidentPosition[3], incidentMomentum[3], incidentKineticEnergy;
-	// Double_t globalTime, localTime;
-
-	void init() {
-		eventID = 0;
-		trackID = 0;
-		parentID = 0;
-		particleID = 0;
-		initX = 0;
-		initY = 0;
-		initZ = 0;
-		initPX = 0;
-		initPY = 0;
-		initPZ = 0;
-		initKineticEnergy = 0;
-		initVolumeID = 0;
-		inciX = 0;
-		inciY = 0;
-		inciZ = 0;
-		inciPX = 0;
-		inciPY = 0;
-		inciPZ = 0;
-		inciKineticEnergy = 0;
-		inciVolumeID = 0;
-		finalX = 0;
-		finalY = 0;
-		finalZ = 0;
-		finalPX = 0;
-		finalPY = 0;
-		finalPZ = 0;
-		finalKineticEnergy = 0;
-		finalVolumeID = 0;
-		isInALPIDE = false;
-	}
-};
-
-struct PARTICLE {
-	enum {
-		unknown = 0,
-		alpha = 1,
-		electron = 2,
-		gammaRay = 3,
-		proton = 4,
-		neutron = 5
-	};
-};
-
 class TAnalysisManager {
-public:
-	TAnalysisManager();
-	TAnalysisManager(const KEI::TConfigFile& config);
-	~TAnalysisManager();
+	public:
+		TAnalysisManager(const KEI::TConfigFile& config);
+		~TAnalysisManager();
 
-private:
-	static TAnalysisManager* mInstance;
+		void initHistograms();
+		void extractData();
+		void savePlots();
+	private:
+		KEI::TConfigFile mConfig;
+		std::filesystem::path mInputFilePath;
+		std::vector<TFile*> mInputFileList;
 
-	KEI::TConfigFile mConfig;
-
-	trackTuple mTrackTuple;
-
-	G4String mFileName;
-	TFile* mFile = nullptr;
-	TTree* mTrackTree = nullptr;
-	ProgressBar* mProgressBar = nullptr;
-	std::vector<std::string> mUnknownParticleList;
-
-	Int_t mEventID = 0;
-
-	G4LogicalVolume* mWorldLogical = nullptr;
-	// G4LogicalVolume* mTungstenLogical = nullptr;
-	// G4LogicalVolume* mGlassLogical = nullptr;
-	G4LogicalVolume* mDetectorLogical = nullptr;
-	G4LogicalVolume* mCollimatorLogical = nullptr;
-	G4LogicalVolume* mShieldLogical =nullptr;
-
-	G4bool isInALPIDE = false;
-public:
-	static TAnalysisManager* Instance();
-
-	void open();
-	void close();
-
-	void doBeginOfRun(const G4Run* run);
-	void doEndOfRun(const G4Run* run);
-	void doBeginOfEvent(const G4Event* event);
-	void doEndOfEvent(const G4Event* event);
-	void doPreTracking(const G4Track* track);
-	void doPostTracking(const G4Track* track);
-	void doStepPhase(const G4Step* step);
-
-	void setFileName(const G4String& name);
-
-	Int_t getParticleID(const G4String& particleID);
-	Int_t getVolumeID(const G4LogicalVolume* volumeID);
+		std::unordered_map<std::string, TH1D*> mHistogram1D; 
+		std::unordered_map<std::string, TH2D*> mHistogram2D;
 };
 
 #endif

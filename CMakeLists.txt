@@ -35,7 +35,7 @@ find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Graf Graf3d Gpad Tree Rint Po
 # Find GEANT4 visualizing driver
 option(WITH_GEANT4_UIVIS "Build with Geant4 UI and Vis drivers" ON)
 if(WITH_GEANT4_UIVIS)
-  find_package(Geant4 REQUIRED ui_all vis_all)
+  find_package(Geant4 REQUIRED ui_all vis_all multithreaded)
 else()
   find_package(Geant4 REQUIRED)
 endif()
