@@ -28,10 +28,27 @@ const std::string collimatorPath = sourceDir / "config/collimator.stl";
 
 TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
 	mAirPressure = config.getConfig("ENVIRONMENT").hasKey("AIR_PRESSURE") ? config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE") : 1.;
-	mCollimatorMaterial = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? config.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
-
+	getCollimatorMaterial(config);
 	mCollimatorSide = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_SIDE") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_SIDE") : 4.;
 	mCollimatorUpper = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_UPPER") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_UPPER") : 3.;
+}
+
+void TDetectorConstruction::getCollimatorMaterial(const KEI::TConfigFile& config) {
+	std::string materialName = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? config.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
+	if ( materialName == "PLA" ) {
+		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
+		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
+		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
+		mCollimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
+		mCollimatorMaterial->AddElement(el_C, 3);
+		mCollimatorMaterial->AddElement(el_H, 4);
+		mCollimatorMaterial->AddElement(el_O, 2);
+	} else if ( materialName == "AL" ) {
+		mCollimatorMaterial = mNist->FindOrBuildMaterial("G4_Al");
+	} else {
+		G4cerr << "Unknown collimator material: " << materialName << "." << G4endl;
+		exit(1);
+	}
 }
 
 G4VPhysicalVolume* TDetectorConstruction::Construct() {
@@ -62,7 +79,6 @@ void TDetectorConstruction::getWorld() {
 	mWorld = new G4PVPlacement(0, G4ThreeVector(), mWorldLogical, "World", 0, false, 0, true);
 }
 
-
 void TDetectorConstruction::getCollimator() {
 	auto mesh = CADMesh::TessellatedMesh::FromSTL(collimatorPath);
 	G4VSolid* meshSolid = mesh->GetSolid();
@@ -78,23 +94,7 @@ void TDetectorConstruction::getCollimator() {
 	G4Tubs* verticalHole = new G4Tubs("sideHole", 0 * mm, (mCollimatorUpper / 2.) * mm, 10 * mm, 0 * deg, 360 * deg);
 	G4SubtractionSolid* collimatorSolid = new G4SubtractionSolid("collimator", collimatorSideHoleSolid, verticalHole);
 
-	G4Material* collimatorMaterial;
-	if ( mCollimatorMaterial == "PLA" ) {
-		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
-		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
-		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-		collimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
-		collimatorMaterial->AddElement(el_C, 3);
-		collimatorMaterial->AddElement(el_H, 4);
-		collimatorMaterial->AddElement(el_O, 2);
-	} else if ( mCollimatorMaterial == "AL" ) {
-		collimatorMaterial = mNist->FindOrBuildMaterial("G4_Al");
-	} else {
-		G4cerr << "Unknown collimator material: " << mCollimatorMaterial << "." << G4endl;
-		exit(1);
-	}
-
-	mCollimatorLogical = new G4LogicalVolume(collimatorSolid, collimatorMaterial, "Collimator");
+	mCollimatorLogical = new G4LogicalVolume(collimatorSolid, mCollimatorMaterial, "Collimator");
 
 	new G4PVPlacement(nullptr, G4ThreeVector(), mCollimatorLogical, "Collimator", mWorldLogical, false, 0, true);
 
@@ -112,22 +112,7 @@ void TDetectorConstruction::getShield() {
 
 	G4Tubs* solidShield = new G4Tubs("Tubs", InnerRadius, OuterRadius, .5 * Height, StartAngle, EndAngle);
 
-	G4Material* collimatorMaterial;
-	if ( mCollimatorMaterial == "PLA" ) {
-		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
-		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
-		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-		collimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
-		collimatorMaterial->AddElement(el_C, 3);
-		collimatorMaterial->AddElement(el_H, 4);
-		collimatorMaterial->AddElement(el_O, 2);
-	} else if ( mCollimatorMaterial == "AL" ) {
-		collimatorMaterial = mNist->FindOrBuildMaterial("G4_Al");
-	} else {
-		G4cerr << "Unknown collimator material: " << mCollimatorMaterial << "." << G4endl;
-		exit(1);
-	}
-	mShieldLogical = new G4LogicalVolume(solidShield, collimatorMaterial, "Shield");
+	mShieldLogical = new G4LogicalVolume(solidShield, mCollimatorMaterial, "Shield");
 }
 
 void TDetectorConstruction::getDetector() {
@@ -143,7 +128,7 @@ void TDetectorConstruction::getDetector() {
 
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
-	G4ThreeVector pos_detector(0 * mm, 0 * mm, -(6.5 + 2 + 12) * mm); // -8.5는 콜리메이터의 끝, 그 뒤는 콜리메이터와 ALPIDE사이의 거리
+	G4ThreeVector pos_detector(0 * mm, 0 * mm, -(6.5 + 2 + 12) * mm);
 
 	mDetector = new G4PVPlacement(nullptr, pos_detector, mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 

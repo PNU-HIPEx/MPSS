@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
 	// UI 매니저 초기화
 	G4UImanager* uiManager = G4UImanager::GetUIpointer();
 
-
 	if ( parser.get_value<bool>("vis") ) {
 		// 아래와 같이 고치면 make가 완료됨.
 		G4VisManager* visManager = new G4VisExecutive("quiet");

@@ -18,7 +18,7 @@ private:
 	G4NistManager* mNist;
 
 	G4double mAirPressure = 1.;
-	G4String mCollimatorMaterial = "PLA";
+	G4Material* mCollimatorMaterial;
 	G4double mCollimatorSide = 4.;
 	G4double mCollimatorUpper = 3.;
 
@@ -26,7 +26,6 @@ private:
 	G4VPhysicalVolume* mCollimator = nullptr;
 	G4VPhysicalVolume* mShield = nullptr;
 	G4VPhysicalVolume* mDetector = nullptr;
-
 
 	G4LogicalVolume* mWorldLogical = nullptr;
 	G4LogicalVolume* mCollimatorLogical = nullptr;
@@ -40,6 +39,7 @@ public:
 	void getCollimator();
 	void getShield();
 	void getDetector();
+	void getCollimatorMaterial(const KEI::TConfigFile& config);
 
 	G4LogicalVolume* getWorldLogical() const { return mWorldLogical; }
 	G4LogicalVolume* getCollimatorLogical() const { return mCollimatorLogical; }
