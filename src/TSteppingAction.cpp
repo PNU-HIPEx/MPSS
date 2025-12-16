@@ -6,19 +6,33 @@
 #include "TSteppingAction.hpp"
 #include "TDetectorConstruction.hpp"
 #include "TIncidentInfo.hpp"
+#include "TEventAction.hpp"
+#include "TTrackingAction.hpp"
 
-TSteppingAction::TSteppingAction(TEventAction* eventAction) : G4UserSteppingAction(), fEventAction(eventAction) { }
+TSteppingAction::TSteppingAction(TEventAction* eventAction, TTrackingAction* trackingAction) : G4UserSteppingAction(), fEventAction(eventAction), fTrackingAction(trackingAction) { }
 
 void TSteppingAction::UserSteppingAction(const G4Step* step) {
 	G4Track* track = step->GetTrack();
-	TIncidentInfo* info = static_cast<TIncidentInfo*>(track->GetUserInformation());
-    if (!info) {
-        info = new TIncidentInfo();
-        track->SetUserInformation(info);
-    }
 
 	G4LogicalVolume* preVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
 	G4LogicalVolume* initVolume = step->GetTrack()->GetOriginTouchableHandle()->GetVolume()->GetLogicalVolume();
+
+	setDetectors();
+
+	if ( preVolume == mDetectorLogical ) {
+		// Mark as incident if the track enters detector from outside
+		if ( step->IsFirstStepInVolume() && initVolume != mDetectorLogical ) {
+			fTrackingAction->setIncidentParticle(step);
+		}
+		// Accumulate energy deposit per track when inside detector
+		const G4double edep = step->GetTotalEnergyDeposit();
+		if ( edep > 0.0 ) {
+			fTrackingAction->addEnergyDeposit(edep);
+		}
+	}
+}
+
+void TSteppingAction::setDetectors() {
 	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
 	if ( mWorldLogical == nullptr ) {
 		mWorldLogical = detectorConstruction->getWorldLogical();
@@ -28,12 +42,5 @@ void TSteppingAction::UserSteppingAction(const G4Step* step) {
 	}
 	if ( mCollimatorLogical == nullptr ) {
 		mCollimatorLogical = detectorConstruction->getCollimatorLogical();
-	}
-
-	if ( preVolume == mDetectorLogical && step->IsFirstStepInVolume() && initVolume != mDetectorLogical) {
-		info->mIsIncident = true;		
-		info->mIncidentPosition = step->GetPreStepPoint()->GetPosition();
-		info->mIncidentMomentum = step->GetPreStepPoint()->GetMomentum();
-		info->mIncidentKineticEnergy = step->GetPreStepPoint()->GetKineticEnergy();
 	}
 }

@@ -28,6 +28,8 @@ void TActionInitialization::Build() const {
 	SetUserAction(eventAction);
 
 	// The event action is passed to the stepping action.
-	SetUserAction(new TSteppingAction(eventAction));
-	SetUserAction(new TTrackingAction);
+	TTrackingAction* trackingAction = new TTrackingAction(eventAction);
+	SetUserAction(trackingAction);
+
+	SetUserAction(new TSteppingAction(eventAction, trackingAction));
 }

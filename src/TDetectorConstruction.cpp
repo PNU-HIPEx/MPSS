@@ -23,10 +23,8 @@ const G4double O_mass = 16.00 * g / mole;
 const G4double C_mass = 12.01 * g / mole;
 const G4double H_mass = 1.008 * g / mole;
 
-
 const std::filesystem::path sourceDir = SOURCE_DIR;
 const std::string collimatorPath = sourceDir / "config/collimator.stl";
-
 
 TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
 	mAirPressure = config.getConfig("ENVIRONMENT").hasKey("AIR_PRESSURE") ? config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE") : 1.;
@@ -48,7 +46,7 @@ void TDetectorConstruction::getWorld() {
 	G4double worldY = 50 * mm;
 	G4double worldZ = 35 * mm;
 
-	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ); 
+	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ);
 
 	G4Material* worldMaterial = new G4Material("worldMaterial", mAirPressure * AIR_DENSITY, 2);
 	G4Element* elN = new G4Element("Nitrogen", "N", 7, N_mass);
@@ -84,7 +82,7 @@ void TDetectorConstruction::getCollimator() {
 	G4double Height_tubsSource = 3 * mm;
 	G4double StartAngle_tubsSources = 0 * deg;
 	G4double EndAngle_tubsSources = 360 * deg;
-	
+
 	// 작은 방사선원
 	G4double OuterRadius_tubsSmallSource = 6.5 * mm;
 	G4double ApertureRadius_SmallSource_Small = 1.5 * mm;
@@ -108,18 +106,18 @@ void TDetectorConstruction::getCollimator() {
 	// 방사선원 솔리드 볼륨
 	// 작은 방사선원 끼우는 홈
 	G4Tubs* solid_TubsSmallSource = new G4Tubs("Tubs", InnerRadius, OuterRadius_tubsSmallSource, .5 * Height_tubsSource, StartAngle_tubsSources, EndAngle_tubsSources);
-	
+
 	// 밑의 큰 방사선원이 큰 통로 일때 사용
 	// G4Tubs* solid_TubsSmallSourceSmaller = new G4Tubs("Tubs", InnerRadius, OuterRadius_tubsSmallSource, .5 * Height_tubsSourceSmaller, StartAngle_tubsSources, EndAngle_tubsSources);
-	
+
 	// 큰 방사선원 끼우는 홈
 	G4Tubs* solid_TubsBigSource = new G4Tubs("Tubs", InnerRadius, OuterRadius_tubsBigSource, .5 * Height_tubsSource, StartAngle_tubsSources, EndAngle_tubsSources);
 
-	
+
 	// 콜리메이팅 통로 솔리드 볼륨 
 	// 방사선원 <> height_ 
 	// 통로 <> ApertureRadius
-	
+
 	// 작은 방사선원 - 작은 통로
 	G4Tubs* solid_SmallSourceSmallAperture = new G4Tubs("Tubs", InnerRadius, ApertureRadius_SmallSource_Small, .5 * Height_Aperture4SmallSource, StartAngle_tubsSources, EndAngle_tubsSources);
 	// 작은 방사선원 - 중간 통로
@@ -136,7 +134,7 @@ void TDetectorConstruction::getCollimator() {
 	// 1. 큰박스에 작은 방사선원을 끼울곳을 만든다 (3 mm 깊이)
 	G4ThreeVector pos_SmallSource(0, 0, .5 * (Z_BoxSmallSource - Height_tubsSource));
 	// G4ThreeVector pos_SmallSource_smaller(0, 0, .5 * (Z_BoxSmallSource - Height_tubsSourceSmaller));
-	
+
 	// 
 	G4SubtractionSolid* BoxSubSmallSource_temp = new G4SubtractionSolid("", solid_BoxSmallSource, solid_TubsSmallSource, 0, pos_SmallSource);
 	G4SubtractionSolid* BoxSubSmallSource = new G4SubtractionSolid("", BoxSubSmallSource_temp, solid_TubsSmallSource, 0, -pos_SmallSource);
@@ -162,14 +160,14 @@ void TDetectorConstruction::getCollimator() {
 	G4RotationMatrix* rot_BigSource = new G4RotationMatrix(0 * deg, 90 * deg, 0 * deg);
 
 	G4Tubs* BigBoxSubBigSource = new G4Tubs("", InnerRadius, OuterRadius_tubsBigSource, 0.5 * 2, StartAngle_tubsSources, EndAngle_tubsSources);
-	
+
 	G4SubtractionSolid* SubSmallAperture4SmallSource = new G4SubtractionSolid("", SubSmallAperture4SmallSource_temp, BigBoxSubBigSource, rot_BigSource, pos_BigBoxSubBigSource);
 	G4SubtractionSolid* SubMediumAperture4SmallSource = new G4SubtractionSolid("", SubMediumAperture4SmallSource_temp, BigBoxSubBigSource, rot_BigSource, pos_BigBoxSubBigSource);
 
 	// 3. 큰 방사선원을 끼우기 위한 박스를 만든다. -> 큰 방사선원을 끼우기 위한 깊이차이 1mm를 추가해주기 위한 박스
 	G4ThreeVector pos_BigSource(0, 0, 0);
 	G4SubtractionSolid* solid_4bigSource = new G4SubtractionSolid("", solid_BoxBigSource, solid_TubsBigSource, rot_BigSource, pos_BigSource);
-	
+
 	// 4. 기존 collimator와 합친다
 	G4ThreeVector pos_box2(0, 0.5 * (Y_BoxSmallSource + Y_BoxBigSource), 0);
 
@@ -189,7 +187,7 @@ void TDetectorConstruction::getCollimator() {
 	// G4SubtractionSolid* collimator_30_30 = new G4SubtractionSolid("", SubSmallAperture4SmallSource_smaller_temp1, solid_BigSourceBigAperture, rot_BigSource, pos_Aperture4Source);
 	// G4SubtractionSolid* collimator_30_40 = new G4SubtractionSolid("", SubMediumAperture4SmallSource_smaller_temp1, solid_BigSourceBigAperture, rot_BigSource, pos_Aperture4Source);
 	// G4SubtractionSolid* collimator_30_50 = new G4SubtractionSolid("", SubBigAperture4SmallSource_smaller_temp1, solid_BigSourceBigAperture, rot_BigSource, pos_Aperture4Source);
-	
+
 	// GUI Test 코드
 	// G4SubtractionSolid* testSoild = new G4SubtractionSolid("", , solid_BoxBigSource, 0, pos_BoxBigSource);
 	// G4Material* Al = mNist->FindOrBuildMaterial("G4_Al");
@@ -217,7 +215,7 @@ void TDetectorConstruction::getCollimator() {
 		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
 		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
 		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-		collimatorMaterial = new G4Material("PLA", 1.25 * g/cm3, 3);
+		collimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
 		collimatorMaterial->AddElement(el_C, 3);
 		collimatorMaterial->AddElement(el_H, 4);
 		collimatorMaterial->AddElement(el_O, 2);
@@ -232,7 +230,7 @@ void TDetectorConstruction::getCollimator() {
 
 
 	G4String name = "logic_" + std::to_string(bigSourceAperture) + "_" + std::to_string(SmallSourceAperture);
-	
+
 	// 이렇게 Logical Volume을 정의하면 클래스 멤버와 무관한 지역 변수를 선언하는 것이어서 TAnalysisManager에서 불러오는 mCollimatorLogical에는 여전히 mullptr이 들어가게 됨..
 	// G4LogicalVolume* mCollimatorLogical = new G4LogicalVolume(solid_collimator, ma_PLA, name);
 	mCollimatorLogical = new G4LogicalVolume(solid_collimator, collimatorMaterial, name);
@@ -260,7 +258,7 @@ void TDetectorConstruction::getShield() {
 		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
 		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
 		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
-		collimatorMaterial = new G4Material("PLA", 1.25 * g/cm3, 3);
+		collimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
 		collimatorMaterial->AddElement(el_C, 3);
 		collimatorMaterial->AddElement(el_H, 4);
 		collimatorMaterial->AddElement(el_O, 2);
@@ -270,7 +268,7 @@ void TDetectorConstruction::getShield() {
 		G4cerr << "Unknown collimator material: " << mCollimatorMaterial << "." << G4endl;
 		exit(1);
 	}
-	mShieldLogical = new G4LogicalVolume(solidShield, collimatorMaterial,"Shield");
+	mShieldLogical = new G4LogicalVolume(solidShield, collimatorMaterial, "Shield");
 }
 
 void TDetectorConstruction::getDetector() {
@@ -287,7 +285,7 @@ void TDetectorConstruction::getDetector() {
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
 	G4RotationMatrix* rot_detector = new G4RotationMatrix(0 * deg, 90 * deg, 90 * deg);
-	G4ThreeVector pos_detector(0 * mm, -(6.5 + 2 + 12)* mm, 0 * mm); // -8.5는 콜리메이터의 끝, 그 뒤는 콜리메이터와 ALPIDE사이의 거리
+	G4ThreeVector pos_detector(0 * mm, -(6.5 + 2 + 12) * mm, 0 * mm); // -8.5는 콜리메이터의 끝, 그 뒤는 콜리메이터와 ALPIDE사이의 거리
 
 	mDetector = new G4PVPlacement(rot_detector, pos_detector, mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 

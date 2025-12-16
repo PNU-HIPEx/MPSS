@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 	G4MTRunManager* runManager = new G4MTRunManager;
 
 	int nThreads = parser.get_value<int>("threads");
-    runManager->SetNumberOfThreads(nThreads);
+	runManager->SetNumberOfThreads(nThreads);
 
 	// 사용자 정의 지오메트리 설정
 	runManager->SetUserInitialization(new TDetectorConstruction(config));
@@ -64,9 +64,9 @@ int main(int argc, char** argv) {
 
 	// UI 매니저 초기화
 	G4UImanager* uiManager = G4UImanager::GetUIpointer();
-	
 
-	if ( parser.get_value<bool>("vis") ){
+
+	if ( parser.get_value<bool>("vis") ) {
 		// 아래와 같이 고치면 make가 완료됨.
 		G4VisManager* visManager = new G4VisExecutive("quiet");
 		visManager->Initialize();
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 	} else {
 		// 시뮬레이션 초기화
 		uiManager->ApplyCommand("/run/initialize");
-		std::array<int, 4> verboseLevels = config.getConfig("CONFIG").getValue<int,4>("VERBOSE");
+		std::array<int, 4> verboseLevels = config.getConfig("CONFIG").getValue<int, 4>("VERBOSE");
 		// 시뮬레이션 설정
 		uiManager->ApplyCommand("/control/verbose " + std::to_string(verboseLevels[0]));
 		uiManager->ApplyCommand("/run/verbose " + std::to_string(verboseLevels[1]));
