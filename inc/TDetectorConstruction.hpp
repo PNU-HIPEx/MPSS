@@ -15,6 +15,7 @@ public:
 	TDetectorConstruction(const KEI::TConfigFile& config);
 	~TDetectorConstruction() override = default;
 private:
+	KEI::TConfigFile mConfig;
 	G4NistManager* mNist;
 
 	G4double mAirPressure = 1.;
@@ -24,12 +25,16 @@ private:
 
 	G4VPhysicalVolume* mWorld = nullptr;
 	G4VPhysicalVolume* mCollimator = nullptr;
-	G4VPhysicalVolume* mShield = nullptr;
+	G4VPhysicalVolume* mShieldVertical = nullptr;
+	G4VPhysicalVolume* mShieldLeft = nullptr;
+	G4VPhysicalVolume* mShieldRight = nullptr;
 	G4VPhysicalVolume* mDetector = nullptr;
 
 	G4LogicalVolume* mWorldLogical = nullptr;
 	G4LogicalVolume* mCollimatorLogical = nullptr;
-	G4LogicalVolume* mShieldLogical = nullptr;
+	G4LogicalVolume* mShieldVerticalLogical = nullptr;
+	G4LogicalVolume* mShieldLeftLogical = nullptr;
+	G4LogicalVolume* mShieldRightLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
 
 public:
@@ -39,11 +44,13 @@ public:
 	void getCollimator();
 	void getShield();
 	void getDetector();
-	void getCollimatorMaterial(const KEI::TConfigFile& config);
+	void getCollimatorMaterial();
 
 	G4LogicalVolume* getWorldLogical() const { return mWorldLogical; }
 	G4LogicalVolume* getCollimatorLogical() const { return mCollimatorLogical; }
-	G4LogicalVolume* getShieldLogical() const { return mShieldLogical; }
+	G4LogicalVolume* getShieldVerticalLogical() const { return mShieldVerticalLogical; }
+	G4LogicalVolume* getShieldLeftLogical() const { return mShieldLeftLogical; }
+	G4LogicalVolume* getShieldRightLogical() const { return mShieldRightLogical; }
 	G4LogicalVolume* getDetectorLogical() const { return mDetectorLogical; }
 };
 

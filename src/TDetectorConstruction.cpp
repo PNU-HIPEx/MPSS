@@ -24,17 +24,16 @@ const G4double C_mass = 12.01 * g / mole;
 const G4double H_mass = 1.008 * g / mole;
 
 const std::filesystem::path sourceDir = SOURCE_DIR;
-const std::string collimatorPath = sourceDir / "config/collimator.stl";
 
-TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction() {
+TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G4VUserDetectorConstruction(), mConfig(config) {
 	mAirPressure = config.getConfig("ENVIRONMENT").hasKey("AIR_PRESSURE") ? config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE") : 1.;
-	getCollimatorMaterial(config);
 	mCollimatorSide = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_SIDE") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_SIDE") : 4.;
 	mCollimatorUpper = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_UPPER") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_UPPER") : 3.;
 }
 
-void TDetectorConstruction::getCollimatorMaterial(const KEI::TConfigFile& config) {
-	std::string materialName = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? config.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
+void TDetectorConstruction::getCollimatorMaterial() {
+	std::string materialName = mConfig.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? mConfig.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
+	std::cout << materialName;
 	if ( materialName == "PLA" ) {
 		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
 		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
@@ -53,6 +52,7 @@ void TDetectorConstruction::getCollimatorMaterial(const KEI::TConfigFile& config
 
 G4VPhysicalVolume* TDetectorConstruction::Construct() {
 	mNist = G4NistManager::Instance();
+	getCollimatorMaterial();
 	getWorld();
 	getCollimator();
 	getShield();
@@ -63,7 +63,7 @@ G4VPhysicalVolume* TDetectorConstruction::Construct() {
 
 void TDetectorConstruction::getWorld() {
 	G4double worldX = 50 * mm;
-	G4double worldY = 50 * mm;
+	G4double worldY = 70 * mm;
 	G4double worldZ = 50 * mm;
 
 	G4Box* solidWorld = new G4Box("World", .5 * worldX, .5 * worldY, .5 * worldZ);
@@ -80,6 +80,8 @@ void TDetectorConstruction::getWorld() {
 }
 
 void TDetectorConstruction::getCollimator() {
+	std::string collimatorPath = sourceDir / "config/collimator.stl";
+
 	auto mesh = CADMesh::TessellatedMesh::FromSTL(collimatorPath);
 	G4VSolid* meshSolid = mesh->GetSolid();
 	G4ThreeVector position(0 * mm, 0 * mm, -8.38 * mm);
@@ -104,15 +106,38 @@ void TDetectorConstruction::getCollimator() {
 }
 
 void TDetectorConstruction::getShield() {
-	G4double InnerRadius = 0. * mm;
-	G4double OuterRadius = 5 * mm;
-	G4double Height = 1 * mm;
-	G4double StartAngle = 0 * deg;
-	G4double EndAngle = 360 * deg;
-
-	G4Tubs* solidShield = new G4Tubs("Tubs", InnerRadius, OuterRadius, .5 * Height, StartAngle, EndAngle);
-
-	mShieldLogical = new G4LogicalVolume(solidShield, mCollimatorMaterial, "Shield");
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_VERTICAL") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_VERTICAL") ) {
+		std::string meshPath = sourceDir / "config/shield_vertical.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mShieldVerticalLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldVertical");
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateZ(-90 * deg);
+		G4ThreeVector position(0 * mm, -8.6 * mm, 6.62 * mm);
+		new G4PVPlacement(rotation, position, mShieldVerticalLogical, "ShieldVertical", mWorldLogical, false, 0, true);
+	}
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_LEFT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_LEFT") ) {
+		std::string meshPath = sourceDir / "config/shield_side.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mShieldLeftLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldLeft");
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateZ(-90 * deg);
+		rotation->rotateX(90 * deg);
+		G4ThreeVector position(-4.5 * mm, -11.2 * mm, 0 * mm);
+		new G4PVPlacement(rotation, position, mShieldLeftLogical, "ShieldLeft", mWorldLogical, false, 0, true);
+	}
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_RIGHT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_RIGHT") ) {
+		std::string meshPath = sourceDir / "config/shield_side.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mShieldRightLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldRight");
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateZ(-90 * deg);
+		rotation->rotateX(-90 * deg);
+		G4ThreeVector position(4.5 * mm, -11.2 * mm, 0 * mm);
+		new G4PVPlacement(rotation, position, mShieldRightLogical, "ShieldRight", mWorldLogical, false, 0, true);
+	}
 }
 
 void TDetectorConstruction::getDetector() {
