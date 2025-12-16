@@ -28,6 +28,9 @@ private:
 	G4VPhysicalVolume* mShieldVertical = nullptr;
 	G4VPhysicalVolume* mShieldLeft = nullptr;
 	G4VPhysicalVolume* mShieldRight = nullptr;
+	G4VPhysicalVolume* mCaseVertical = nullptr;
+	G4VPhysicalVolume* mCaseLeft = nullptr;
+	G4VPhysicalVolume* mCaseRight = nullptr;
 	G4VPhysicalVolume* mDetector = nullptr;
 
 	G4LogicalVolume* mWorldLogical = nullptr;
@@ -35,6 +38,9 @@ private:
 	G4LogicalVolume* mShieldVerticalLogical = nullptr;
 	G4LogicalVolume* mShieldLeftLogical = nullptr;
 	G4LogicalVolume* mShieldRightLogical = nullptr;
+	G4LogicalVolume* mCaseVerticalLogical = nullptr;
+	G4LogicalVolume* mCaseLeftLogical = nullptr;
+	G4LogicalVolume* mCaseRightLogical = nullptr;
 	G4LogicalVolume* mDetectorLogical = nullptr;
 
 public:
@@ -45,12 +51,16 @@ public:
 	void getShield();
 	void getDetector();
 	void getCollimatorMaterial();
+	void getCase();
 
 	G4LogicalVolume* getWorldLogical() const { return mWorldLogical; }
 	G4LogicalVolume* getCollimatorLogical() const { return mCollimatorLogical; }
 	G4LogicalVolume* getShieldVerticalLogical() const { return mShieldVerticalLogical; }
 	G4LogicalVolume* getShieldLeftLogical() const { return mShieldLeftLogical; }
 	G4LogicalVolume* getShieldRightLogical() const { return mShieldRightLogical; }
+	G4LogicalVolume* getCaseVerticalLogical() const { return mCaseVerticalLogical; }
+	G4LogicalVolume* getCaseLeftLogical() const { return mCaseLeftLogical; }
+	G4LogicalVolume* getCaseRightLogical() const { return mCaseRightLogical; }
 	G4LogicalVolume* getDetectorLogical() const { return mDetectorLogical; }
 };
 

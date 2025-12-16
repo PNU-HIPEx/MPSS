@@ -84,7 +84,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	std::string sourceType = mConfig.getConfig("ENVIRONMENT").hasKey("SOURCE_TYPE") ? mConfig.getConfig("ENVIRONMENT").getValue<std::string>("SOURCE_TYPE") : "U";
 
 	if ( sourceType == "U" ) {
-		G4double centerPosition[3] = {0, 0, 6.5 + 1 + 2}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double centerPosition[3] = {0, 0, 9.42}; // 6.62 + 1 + 1.8 
 		G4double radius = 1.5 * mm;
 		G4double r = radius * std::sqrt(G4UniformRand());
 		G4double theta = 2 * M_PI * G4UniformRand();
@@ -104,7 +104,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		// 입자 운동 방향 저장
 		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
 	} else if ( sourceType == "L" ) {
-		G4double centerPosition[3] = {-(5.5 + 0.5), 0, 0}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double centerPosition[3] = {-5.9, 0, 0}; // 5.5 + 0.4
 		G4double radius = 2.5 * mm;
 		G4double r = radius * std::sqrt(G4UniformRand());
 		G4double theta = 2 * M_PI * G4UniformRand();
@@ -124,7 +124,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		// 입자 운동 방향 저장
 		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
 	} else if ( sourceType == "R" ) {
-		G4double centerPosition[3] = {(5.5 + 0.5), 0, 0}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double centerPosition[3] = {5.9, 0, 0}; // 5.5 + 0.4
 		G4double radius = 2.5 * mm;
 		G4double r = radius * std::sqrt(G4UniformRand());
 		G4double theta = 2 * M_PI * G4UniformRand();

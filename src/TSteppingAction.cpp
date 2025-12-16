@@ -43,4 +43,22 @@ void TSteppingAction::setDetectors() {
 	if ( mCollimatorLogical == nullptr ) {
 		mCollimatorLogical = detectorConstruction->getCollimatorLogical();
 	}
+	if ( mShieldVerticalLogical == nullptr ) {
+		mShieldVerticalLogical = detectorConstruction->getShieldVerticalLogical();
+	}
+	if ( mShieldLeftLogical == nullptr ) {
+		mShieldLeftLogical = detectorConstruction->getShieldLeftLogical();
+	}
+	if ( mShieldRightLogical == nullptr ) {
+		mShieldRightLogical = detectorConstruction->getShieldRightLogical();
+	}
+	if ( mCaseVerticalLogical == nullptr ) {
+		mCaseVerticalLogical = detectorConstruction->getCaseVerticalLogical();
+	}
+	if ( mCaseLeftLogical == nullptr ) {
+		mCaseLeftLogical = detectorConstruction->getCaseLeftLogical();
+	}
+	if ( mCaseRightLogical == nullptr ) {
+		mCaseRightLogical = detectorConstruction->getCaseRightLogical();
+	}
 }

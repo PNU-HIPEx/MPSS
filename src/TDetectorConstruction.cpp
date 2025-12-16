@@ -56,6 +56,7 @@ G4VPhysicalVolume* TDetectorConstruction::Construct() {
 	getWorld();
 	getCollimator();
 	getShield();
+	getCase();
 	getDetector();
 
 	return mWorld;
@@ -97,7 +98,7 @@ void TDetectorConstruction::getCollimator() {
 	G4SubtractionSolid* collimatorSolid = new G4SubtractionSolid("collimator", collimatorSideHoleSolid, verticalHole);
 
 	mCollimatorLogical = new G4LogicalVolume(collimatorSolid, mCollimatorMaterial, "Collimator");
-
+	mCollimatorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Gray()));
 	new G4PVPlacement(nullptr, G4ThreeVector(), mCollimatorLogical, "Collimator", mWorldLogical, false, 0, true);
 
 	G4Region* collimatorRegion = new G4Region("CollimatorRegion");
@@ -111,6 +112,7 @@ void TDetectorConstruction::getShield() {
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
 		mShieldVerticalLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldVertical");
+		mShieldVerticalLogical->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateZ(-90 * deg);
 		G4ThreeVector position(0 * mm, -8.6 * mm, 6.62 * mm);
@@ -121,6 +123,7 @@ void TDetectorConstruction::getShield() {
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
 		mShieldLeftLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldLeft");
+		mShieldLeftLogical->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateZ(-90 * deg);
 		rotation->rotateX(90 * deg);
@@ -132,11 +135,48 @@ void TDetectorConstruction::getShield() {
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
 		mShieldRightLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "ShieldRight");
+		mShieldRightLogical->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateZ(-90 * deg);
 		rotation->rotateX(-90 * deg);
 		G4ThreeVector position(4.5 * mm, -11.2 * mm, 0 * mm);
 		new G4PVPlacement(rotation, position, mShieldRightLogical, "ShieldRight", mWorldLogical, false, 0, true);
+	}
+}
+
+void TDetectorConstruction::getCase() {
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_VERTICAL") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_VERTICAL") ) {
+		std::string meshPath = sourceDir / "config/case_vertical.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mCaseVerticalLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseVertical"); // Material 바꿔야 함
+		mCaseVerticalLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateY(180 * deg);
+		G4ThreeVector position(0 * mm, 0 * mm, 12.42 * mm);
+		new G4PVPlacement(rotation, position, mCaseVerticalLogical, "CaseVertical", mWorldLogical, false, 0, true);
+	}
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_LEFT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_LEFT") ) {
+		std::string meshPath = sourceDir / "config/case_side.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mCaseLeftLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseLeft"); // Material 바꿔야 함
+		mCaseLeftLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateY(90 * deg);
+		G4ThreeVector position(-5.5 * mm, 0 * mm, 0 * mm);
+		new G4PVPlacement(rotation, position, mCaseLeftLogical, "CaseLeft", mWorldLogical, false, 0, true);
+	}
+	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_RIGHT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_RIGHT") ) {
+		std::string meshPath = sourceDir / "config/case_side.stl";
+		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
+		G4VSolid* meshSolid = mesh->GetSolid();
+		mCaseRightLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseRight"); // Material 바꿔야 함
+		mCaseRightLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+		G4RotationMatrix* rotation = new G4RotationMatrix();
+		rotation->rotateY(-90 * deg);
+		G4ThreeVector position(5.5 * mm, 0 * mm, 0 * mm);
+		new G4PVPlacement(rotation, position, mCaseRightLogical, "CaseRight", mWorldLogical, false, 0, true);
 	}
 }
 
