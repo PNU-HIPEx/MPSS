@@ -80,72 +80,71 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
 	// Big Source(u, up)
 	// position randomize
-	G4double centerPosition[3] = {0, 6.5 + 1 + 2 , 0}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
-	G4double radius = mConfig.getConfig("ENVIRONMENT").getValue<double>("SOURCE_RADIUS") * mm;
 
-	G4double r = radius * std::sqrt(G4UniformRand());
-	G4double theta = 2 * M_PI * G4UniformRand();
-	G4double randomX = centerPosition[0] + r * std::sin(theta);
-	G4double randomY = centerPosition[1];
-	G4double randomZ = centerPosition[2] + r * std::cos(theta);	
+	std::string sourceType = mConfig.getConfig("ENVIRONMENT").hasKey("SOURCE_TYPE") ? mConfig.getConfig("ENVIRONMENT").getValue<std::string>("SOURCE_TYPE") : "U";
 
-	// momentum randomize
-	// G4double cosTheta = 2 * G4UniformRand() - 1; // Solid angle = 4pi
-	G4double cosTheta = - G4UniformRand(); // Solid angle = 2pi
-	// G4double cosTheta = 0.5 * G4UniformRand() - 1; // Solid angle = 1pi
-	G4double sinTheta = std::sqrt(1 - cosTheta*cosTheta);
-	G4double phi_momentum = 2 * M_PI * G4UniformRand();
-	G4double pX = sinTheta * std::sin(phi_momentum);
-	G4double pY = cosTheta;
-	G4double pZ = sinTheta * std::cos(phi_momentum);
+	if ( sourceType == "U" ) {
+		G4double centerPosition[3] = {0, 0, 6.5 + 1 + 2}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double radius = 1.5 * mm;
+		G4double r = radius * std::sqrt(G4UniformRand());
+		G4double theta = 2 * M_PI * G4UniformRand();
 
+		G4double randomX = centerPosition[0] + r * std::sin(theta);
+		G4double randomY = centerPosition[1] + r * std::cos(theta);
+		G4double randomZ = centerPosition[2];
 
-	// // Small Source(-z)
-	// // position randomize
-	// G4double centerPosition[3] = {0, 0, -(4.5 + 1 + 0.5)}; // 4.5 + 1 은 콜리메이터 +0.5 는 소스 자체의 구조에 의한 것
-	// G4double radius = mConfig.getConfig("ENVIRONMENT").getValue<double>("SOURCE_RADIUS") * mm;
+		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
+		G4double phi_momentum = 2 * M_PI * G4UniformRand();
+		G4double pX = sinTheta * std::sin(phi_momentum);
+		G4double pY = sinTheta * std::cos(phi_momentum);
+		G4double pZ = cosTheta;
+		// 입자 위치 저장 
+		fParticleGun->SetParticlePosition(G4ThreeVector(randomX, randomY, randomZ));
+		// 입자 운동 방향 저장
+		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
+	} else if ( sourceType == "L" ) {
+		G4double centerPosition[3] = {-(6.5 + 1 + 2), 0, 0}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double radius = 2.5 * mm;
+		G4double r = radius * std::sqrt(G4UniformRand());
+		G4double theta = 2 * M_PI * G4UniformRand();
 
-	// G4double r = radius * std::sqrt(G4UniformRand());
-	// G4double theta = 2 * M_PI * G4UniformRand();
-	// G4double randomX = centerPosition[0] + r * std::cos(theta);
-	// G4double randomY = centerPosition[1] + r * std::sin(theta);
-	// G4double randomZ = centerPosition[2];
+		G4double randomX = centerPosition[0];
+		G4double randomY = centerPosition[1] + r * std::sin(theta);
+		G4double randomZ = centerPosition[2] + r * std::cos(theta);
 
-	// // momentum randomize
-	// G4double cosTheta = + G4UniformRand(); // Solid angle = 2pi
-	// G4double sinTheta = std::sqrt(1 - cosTheta*cosTheta);
-	// G4double phi_momentum = 2 * M_PI * G4UniformRand();
-	// G4double pX = sinTheta * std::cos(phi_momentum);
-	// G4double pY = sinTheta * std::sin(phi_momentum); 
-	// G4double pZ = cosTheta;
+		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
+		G4double phi_momentum = 2 * M_PI * G4UniformRand();
+		G4double pX = -cosTheta;
+		G4double pY = sinTheta * std::sin(phi_momentum);
+		G4double pZ = sinTheta * std::cos(phi_momentum);
+		// 입자 위치 저장 
+		fParticleGun->SetParticlePosition(G4ThreeVector(randomX, randomY, randomZ));
+		// 입자 운동 방향 저장
+		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
+	} else if ( sourceType == "R" ) {
+		G4double centerPosition[3] = {(6.5 + 1 + 2), 0, 0}; // 6.5 + 1 은 콜리메이터 +2 는 소스 자체의 구조에 의한 것 
+		G4double radius = 2.5 * mm;
+		G4double r = radius * std::sqrt(G4UniformRand());
+		G4double theta = 2 * M_PI * G4UniformRand();
 
+		G4double randomX = centerPosition[0];
+		G4double randomY = centerPosition[1] + r * std::sin(theta);
+		G4double randomZ = centerPosition[2] + r * std::cos(theta);
 
-	// // Small Source(+z) 
-	// // position randomize
-	// G4double centerPosition[3] = {0, 0, +(4.5 + 0.5 + 1)};
-	// G4double radius = mConfig.getConfig("ENVIRONMENT").getValue<double>("SOURCE_RADIUS") * mm;
+		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
+		G4double phi_momentum = 2 * M_PI * G4UniformRand();
+		G4double pX = cosTheta;
+		G4double pY = sinTheta * std::sin(phi_momentum);
+		G4double pZ = sinTheta * std::cos(phi_momentum);
+		// 입자 위치 저장 
+		fParticleGun->SetParticlePosition(G4ThreeVector(randomX, randomY, randomZ));
+		// 입자 운동 방향 저장
+		fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
+	}
 
-	// G4double r = radius * std::sqrt(G4UniformRand());
-	// G4double theta = 2 * M_PI * G4UniformRand();
-	// G4double randomX = centerPosition[0] + r * std::cos(theta);
-	// G4double randomY = centerPosition[1] + r * std::sin(theta);
-	// G4double randomZ = centerPosition[2];
-
-	// // momentum randomize
-	// G4double cosTheta = - G4UniformRand(); // Solid angle = 2pi
-	// G4double sinTheta = std::sqrt(1 - cosTheta*cosTheta);
-	// G4double phi_momentum = 2 * M_PI * G4UniformRand();
-	// G4double pX = sinTheta * std::cos(phi_momentum);
-	// G4double pY = sinTheta * std::sin(phi_momentum); 
-	// G4double pZ = cosTheta;
-
-
-
-
-	// 입자 위치 저장 
-	fParticleGun->SetParticlePosition(G4ThreeVector(randomX, randomY, randomZ));
-	// 입자 운동 방향 저장
-	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX, pY, pZ));
 	// 입자 생성
 	fParticleGun->GeneratePrimaryVertex(anEvent);
 

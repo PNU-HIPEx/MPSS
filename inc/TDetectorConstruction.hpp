@@ -19,12 +19,14 @@ private:
 
 	G4double mAirPressure = 1.;
 	G4String mCollimatorMaterial = "PLA";
+	G4double mCollimatorSide = 4.;
+	G4double mCollimatorUpper = 3.;
 
 	G4VPhysicalVolume* mWorld = nullptr;
 	G4VPhysicalVolume* mCollimator = nullptr;
 	G4VPhysicalVolume* mShield = nullptr;
 	G4VPhysicalVolume* mDetector = nullptr;
-	
+
 
 	G4LogicalVolume* mWorldLogical = nullptr;
 	G4LogicalVolume* mCollimatorLogical = nullptr;
