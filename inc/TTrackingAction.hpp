@@ -18,12 +18,18 @@ private:
 	G4double mIncidentKineticEnergy;
 
 	G4double mEnergyDeposit;
-
+	G4int mNStep;
+	G4double mDepositMeanX;
+	G4double mDepositMeanY;
+	G4double mDepositMeanZ;
+	G4double mDepositStdDevX;
+	G4double mDepositStdDevY;
+	G4double mDepositStdDevZ;
 public:
 	void PreUserTrackingAction(const G4Track*) override;
 	void PostUserTrackingAction(const G4Track*) override;
 
-	void addEnergyDeposit(G4double energyDeposit);
+	void addEnergyDeposit(G4double energyDeposit, G4double meanX, G4double meanY, G4double meanZ);
 	void setIncidentParticle(const G4Step* step);
 };
 

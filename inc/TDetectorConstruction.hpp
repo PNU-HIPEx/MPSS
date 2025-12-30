@@ -20,6 +20,7 @@ private:
 
 	G4double mAirPressure = 1.;
 	G4Material* mCollimatorMaterial;
+	G4Material* mPE;
 	G4double mCollimatorSide = 4.;
 	G4double mCollimatorUpper = 3.;
 

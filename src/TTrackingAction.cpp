@@ -28,25 +28,38 @@ void TTrackingAction::PreUserTrackingAction(const G4Track* track) {
 	}
 	mIncident = false;
 	mEnergyDeposit = 0.;
+	mNStep = 0;
+	mDepositMeanX = 0.;
+	mDepositMeanY = 0.;
+	mDepositStdDevX = 0.;
+	mDepositStdDevY = 0.;
 }
 
 void TTrackingAction::PostUserTrackingAction(const G4Track* track) {
 	if ( mIncident ) {
 		TIncidentInfo* incident = new TIncidentInfo(track);
-		incident->setIncidentInfo(mIncidentPosition, mIncidentMomentum, mIncidentKineticEnergy, mEnergyDeposit);
+		incident->setIncidentInfo(mIncidentPosition, mIncidentMomentum, mIncidentKineticEnergy, mEnergyDeposit, mNStep, mDepositMeanX, mDepositMeanY, mDepositStdDevX, mDepositStdDevY);
 		fEventAction->addIncidentParticle(incident);
 	} else if ( mEnergyDeposit > 0. ) {
 		for ( TIncidentInfo* incident : fEventAction->getIncidentInfo() ) {
 			std::vector<int> familyID = incident->getFamilyID();
 			if ( std::find(familyID.begin(), familyID.end(), track->GetParentID()) != familyID.end() ) {
-				incident->addEnergyDeposit(track->GetTrackID(), mEnergyDeposit);
+				incident->addEnergyDeposit(track->GetTrackID(), mEnergyDeposit, mNStep, mDepositMeanX, mDepositMeanY, mDepositMeanZ, mDepositStdDevX, mDepositStdDevY, mDepositStdDevZ);
+				break;
 			}
 		}
 	}
 }
 
-void TTrackingAction::addEnergyDeposit(G4double energyDeposit) {
+void TTrackingAction::addEnergyDeposit(G4double energyDeposit, G4double meanX, G4double meanY, G4double meanZ) {
 	mEnergyDeposit += energyDeposit;
+	mNStep++;
+	mDepositMeanX += meanX;
+	mDepositMeanY += meanY;
+	mDepositMeanZ += meanZ;
+	mDepositStdDevX += meanX * meanX;
+	mDepositStdDevY += meanY * meanY;
+	mDepositStdDevZ += meanZ * meanZ;
 }
 
 void TTrackingAction::setIncidentParticle(const G4Step* step) {

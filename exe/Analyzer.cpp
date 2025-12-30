@@ -9,6 +9,6 @@ int main(int argc, char** argv) {
 	analysisManager.extractData();
 	analysisManager.savePlots();
 
-	
+
 	return 0;
 }

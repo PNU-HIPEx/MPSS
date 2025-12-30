@@ -93,7 +93,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		G4double randomY = centerPosition[1] + r * std::cos(theta);
 		G4double randomZ = centerPosition[2];
 
-		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double cosTheta = 1 - 2 * G4UniformRand(); // Solid angle = 2pi
 		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
 		G4double phi_momentum = 2 * M_PI * G4UniformRand();
 		G4double pX = sinTheta * std::sin(phi_momentum);
@@ -113,7 +113,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		G4double randomY = centerPosition[1] + r * std::sin(theta);
 		G4double randomZ = centerPosition[2] + r * std::cos(theta);
 
-		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double cosTheta = 1 - 2 * G4UniformRand(); // Solid angle = 2pi
 		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
 		G4double phi_momentum = 2 * M_PI * G4UniformRand();
 		G4double pX = -cosTheta;
@@ -133,7 +133,7 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 		G4double randomY = centerPosition[1] + r * std::sin(theta);
 		G4double randomZ = centerPosition[2] + r * std::cos(theta);
 
-		G4double cosTheta = -G4UniformRand(); // Solid angle = 2pi
+		G4double cosTheta = 1 - 2 * G4UniformRand(); // Solid angle = 2pi
 		G4double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
 		G4double phi_momentum = 2 * M_PI * G4UniformRand();
 		G4double pX = cosTheta;

@@ -23,10 +23,17 @@ private:
 	G4int mFinalVolumeID;
 
 	G4double mEnergyDeposit = 0.0;
+	G4int mNStep;
+	G4double mDepositMeanX;
+	G4double mDepositMeanY;
+	G4double mDepositMeanZ;
+	G4double mDepositStdDevX;
+	G4double mDepositStdDevY;
+	G4double mDepositStdDevZ;
 public:
-	void setIncidentInfo(G4ThreeVector position, G4ThreeVector momentum, G4double kineticEnergy, G4double energyDeposit);
+	void setIncidentInfo(G4ThreeVector position, G4ThreeVector momentum, G4double kineticEnergy, G4double energyDeposit, G4int nStep, G4double depositMeanX, G4double depositMeanY, G4double depositStdDevX, G4double depositStdDevY);
 	std::vector<int> getFamilyID();
-	void addEnergyDeposit(G4int trackID, G4double energyDeposit);
+	void addEnergyDeposit(G4int trackID, G4double energyDeposit, G4int nStep, G4double depositMeanX, G4double depositMeanY, G4double depositMeanZ, G4double depositStdDevX, G4double depositStdDevY, G4double depositStdDevZ);
 	G4int getTrackID() { return mTrackID; }
 	G4int getParentID() { return mParentID; }
 	G4int getParticleID() { return mParticleID; }
@@ -47,11 +54,17 @@ public:
 	G4double getIncidentMomentumZ() { return mIncidentMomentum.z(); }
 	G4double getIncidentKineticEnergy() { return mIncidentKineticEnergy; }
 	G4double getEnergyDeposit() { return mEnergyDeposit; }
+	G4double getNStep() { return mNStep; }
+	G4double getDepositMeanX() { return mDepositMeanX / mNStep; }
+	G4double getDepositMeanY() { return mDepositMeanY / mNStep; }
+	G4double getDepositStdDevX() { return std::sqrt((mDepositStdDevX / mNStep) - std::pow(mDepositMeanX / mNStep, 2)); }
+	G4double getDepositStdDevY() { return std::sqrt((mDepositStdDevY / mNStep) - std::pow(mDepositMeanY / mNStep, 2)); }
 
 	G4double getFinalPositionX() { return mFinalPosition.x(); }
 	G4double getFinalPositionY() { return mFinalPosition.y(); }
 	G4double getFinalPositionZ() { return mFinalPosition.z(); }
 	G4int getFinalVolumeID() { return mFinalVolumeID; }
+
 
 };
 

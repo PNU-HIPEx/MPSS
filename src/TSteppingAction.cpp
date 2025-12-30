@@ -27,7 +27,7 @@ void TSteppingAction::UserSteppingAction(const G4Step* step) {
 		// Accumulate energy deposit per track when inside detector
 		const G4double edep = step->GetTotalEnergyDeposit();
 		if ( edep > 0.0 ) {
-			fTrackingAction->addEnergyDeposit(edep);
+			fTrackingAction->addEnergyDeposit(edep, step->GetPreStepPoint()->GetPosition().x(), step->GetPreStepPoint()->GetPosition().y(), step->GetPreStepPoint()->GetPosition().z());
 		}
 	}
 }

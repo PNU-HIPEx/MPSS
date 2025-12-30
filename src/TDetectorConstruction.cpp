@@ -34,10 +34,12 @@ TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G
 void TDetectorConstruction::getCollimatorMaterial() {
 	std::string materialName = mConfig.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_MATERIAL") ? mConfig.getConfig("ENVIRONMENT").getValue<std::string>("COLLIMATOR_MATERIAL") : "PLA";
 	std::cout << materialName;
+
+	G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
+	G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
+	G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
+
 	if ( materialName == "PLA" ) {
-		G4Element* el_C = new G4Element("Carbon", "C", 6, C_mass);
-		G4Element* el_H = new G4Element("Hydrogen", "H", 1, H_mass);
-		G4Element* el_O = new G4Element("Oxygen", "O", 8, O_mass);
 		mCollimatorMaterial = new G4Material("PLA", 1.25 * g / cm3, 3);
 		mCollimatorMaterial->AddElement(el_C, 3);
 		mCollimatorMaterial->AddElement(el_H, 4);
@@ -48,6 +50,10 @@ void TDetectorConstruction::getCollimatorMaterial() {
 		G4cerr << "Unknown collimator material: " << materialName << "." << G4endl;
 		exit(1);
 	}
+
+	mPE = new G4Material("PE", 0.9 * g / cm3, 2);
+	mPE->AddElement(el_C, 2);
+	mPE->AddElement(el_H, 4);
 }
 
 G4VPhysicalVolume* TDetectorConstruction::Construct() {
@@ -107,6 +113,7 @@ void TDetectorConstruction::getCollimator() {
 }
 
 void TDetectorConstruction::getShield() {
+	G4Region* region = new G4Region("ShieldRegion");
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_VERTICAL") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_VERTICAL") ) {
 		std::string meshPath = sourceDir / "config/shield_vertical.stl";
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
@@ -117,6 +124,9 @@ void TDetectorConstruction::getShield() {
 		rotation->rotateZ(-90 * deg);
 		G4ThreeVector position(0 * mm, -8.6 * mm, 6.62 * mm);
 		new G4PVPlacement(rotation, position, mShieldVerticalLogical, "ShieldVertical", mWorldLogical, false, 0, true);
+
+		mShieldVerticalLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mShieldVerticalLogical);
 	}
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_LEFT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_LEFT") ) {
 		std::string meshPath = sourceDir / "config/shield_side.stl";
@@ -129,6 +139,9 @@ void TDetectorConstruction::getShield() {
 		rotation->rotateX(90 * deg);
 		G4ThreeVector position(-4.5 * mm, -11.2 * mm, 0 * mm);
 		new G4PVPlacement(rotation, position, mShieldLeftLogical, "ShieldLeft", mWorldLogical, false, 0, true);
+
+		mShieldLeftLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mShieldLeftLogical);
 	}
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("SHIELD_RIGHT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("SHIELD_RIGHT") ) {
 		std::string meshPath = sourceDir / "config/shield_side.stl";
@@ -141,49 +154,64 @@ void TDetectorConstruction::getShield() {
 		rotation->rotateX(-90 * deg);
 		G4ThreeVector position(4.5 * mm, -11.2 * mm, 0 * mm);
 		new G4PVPlacement(rotation, position, mShieldRightLogical, "ShieldRight", mWorldLogical, false, 0, true);
+
+		mShieldRightLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mShieldRightLogical);
 	}
 }
 
 void TDetectorConstruction::getCase() {
+	G4Region* region = new G4Region("CaseRegion");
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_VERTICAL") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_VERTICAL") ) {
 		std::string meshPath = sourceDir / "config/case_vertical.stl";
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
-		mCaseVerticalLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseVertical"); // Material 바꿔야 함
+		mCaseVerticalLogical = new G4LogicalVolume(meshSolid, mPE, "CaseVertical");
 		mCaseVerticalLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateY(180 * deg);
 		G4ThreeVector position(0 * mm, 0 * mm, 12.42 * mm);
 		new G4PVPlacement(rotation, position, mCaseVerticalLogical, "CaseVertical", mWorldLogical, false, 0, true);
+
+		mCaseVerticalLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mCaseVerticalLogical);
 	}
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_LEFT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_LEFT") ) {
 		std::string meshPath = sourceDir / "config/case_side.stl";
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
-		mCaseLeftLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseLeft"); // Material 바꿔야 함
+		G4Material* al = mNist->FindOrBuildMaterial("G4_Al");
+		mCaseLeftLogical = new G4LogicalVolume(meshSolid, al, "CaseLeft");
 		mCaseLeftLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateY(90 * deg);
 		G4ThreeVector position(-5.5 * mm, 0 * mm, 0 * mm);
 		new G4PVPlacement(rotation, position, mCaseLeftLogical, "CaseLeft", mWorldLogical, false, 0, true);
+
+		mCaseLeftLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mCaseLeftLogical);
 	}
 	if ( mConfig.getConfig("ENVIRONMENT").hasKey("CASE_RIGHT") && mConfig.getConfig("ENVIRONMENT").getValue<bool>("CASE_RIGHT") ) {
 		std::string meshPath = sourceDir / "config/case_side.stl";
 		auto mesh = CADMesh::TessellatedMesh::FromSTL(meshPath);
 		G4VSolid* meshSolid = mesh->GetSolid();
-		mCaseRightLogical = new G4LogicalVolume(meshSolid, mCollimatorMaterial, "CaseRight"); // Material 바꿔야 함
+		G4Material* al = mNist->FindOrBuildMaterial("G4_Al");
+		mCaseRightLogical = new G4LogicalVolume(meshSolid, al, "CaseRight");
 		mCaseRightLogical->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 		G4RotationMatrix* rotation = new G4RotationMatrix();
 		rotation->rotateY(-90 * deg);
 		G4ThreeVector position(5.5 * mm, 0 * mm, 0 * mm);
 		new G4PVPlacement(rotation, position, mCaseRightLogical, "CaseRight", mWorldLogical, false, 0, true);
+
+		mCaseRightLogical->SetRegion(region);
+		region->AddRootLogicalVolume(mCaseRightLogical);
 	}
 }
 
 void TDetectorConstruction::getDetector() {
 	G4double detectorX = 30 * mm;
 	G4double detectorY = 15 * mm;
-	G4double detectorZ = 100 * um;
+	G4double detectorZ = 50 * um;
 
 	G4Box* solidDetector = new G4Box("ALPIDESolid", .5 * detectorX, .5 * detectorY, .5 * detectorZ);
 

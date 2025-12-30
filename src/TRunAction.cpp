@@ -3,6 +3,7 @@
 #include "TRunAction.hpp"
 #include "G4Run.hh"
 #include "TAnalysisManager.hpp"
+#include "config.hpp"
 
 TRunAction::TRunAction(const KEI::TConfigFile& config) : G4UserRunAction(), mConfig(config) {
 	std::vector<G4double> positionVector;
@@ -44,6 +45,13 @@ TRunAction::TRunAction(const KEI::TConfigFile& config) : G4UserRunAction(), mCon
 	analysisManager->CreateNtupleDColumn("Incident_momentum_PZ");
 	analysisManager->CreateNtupleDColumn("Incident_kinetic_energy");
 	analysisManager->CreateNtupleDColumn("Deposited_energy");
+	analysisManager->CreateNtupleIColumn("Step_in_detector");
+	analysisManager->CreateNtupleDColumn("Deposit_mean_X");
+	analysisManager->CreateNtupleDColumn("Deposit_mean_Y");
+	analysisManager->CreateNtupleDColumn("Deposit_mean_Z");
+	analysisManager->CreateNtupleDColumn("Deposit_stddev_X");
+	analysisManager->CreateNtupleDColumn("Deposit_stddev_Y");
+	analysisManager->CreateNtupleDColumn("Deposit_stddev_Z");
 
 	analysisManager->CreateNtupleDColumn("Final_position_X");
 	analysisManager->CreateNtupleDColumn("Final_position_Y");
@@ -54,9 +62,9 @@ TRunAction::TRunAction(const KEI::TConfigFile& config) : G4UserRunAction(), mCon
 
 void TRunAction::BeginOfRunAction(const G4Run* run) {
 	G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
-	std::filesystem::path temp = mConfig.getConfig("FILE").getValue<std::string>("OUTPUT_FILE");
+	std::filesystem::path dataDir = DATA_DIR;
+	std::filesystem::path temp = dataDir / mConfig.getConfig("FILE").getValue<std::string>("OUTPUT_FILE");
 	std::filesystem::path outputFilePath = temp.parent_path() / (temp.stem().string() + "_Run" + std::to_string(run->GetRunID()) + ".root");
-
 	// 절대 경로로 변환
 	std::filesystem::path absolutePath = std::filesystem::absolute(outputFilePath);
 	std::filesystem::create_directories(absolutePath.parent_path());

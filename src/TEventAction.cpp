@@ -38,11 +38,18 @@ void TEventAction::EndOfEventAction(const G4Event* event) {
 		analysisManager->FillNtupleDColumn(17, incident->getIncidentMomentumZ());
 		analysisManager->FillNtupleDColumn(18, incident->getIncidentKineticEnergy());
 		analysisManager->FillNtupleDColumn(19, incident->getEnergyDeposit());
+		analysisManager->FillNtupleIColumn(20, incident->getNStep());
+		analysisManager->FillNtupleDColumn(21, incident->getDepositMeanX());
+		analysisManager->FillNtupleDColumn(22, incident->getDepositMeanY());
+		analysisManager->FillNtupleDColumn(23, incident->getDepositMeanY());
+		analysisManager->FillNtupleDColumn(24, incident->getDepositStdDevX());
+		analysisManager->FillNtupleDColumn(25, incident->getDepositStdDevY());
+		analysisManager->FillNtupleDColumn(26, incident->getDepositStdDevY());
 
-		analysisManager->FillNtupleDColumn(20, incident->getFinalPositionX());
-		analysisManager->FillNtupleDColumn(21, incident->getFinalPositionY());
-		analysisManager->FillNtupleDColumn(22, incident->getFinalPositionZ());
-		analysisManager->FillNtupleIColumn(23, incident->getFinalVolumeID());
+		analysisManager->FillNtupleDColumn(27, incident->getFinalPositionX());
+		analysisManager->FillNtupleDColumn(28, incident->getFinalPositionY());
+		analysisManager->FillNtupleDColumn(29, incident->getFinalPositionZ());
+		analysisManager->FillNtupleIColumn(30, incident->getFinalVolumeID());
 		analysisManager->AddNtupleRow();
 	}
 }
