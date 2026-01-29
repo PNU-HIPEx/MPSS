@@ -8,6 +8,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TLegend.h"
+#include "TF1.h"
 
 #include "TPlot.hpp"
 #include "config.hpp"
@@ -76,8 +77,12 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 		}
 		// hist->GetXaxis()->LabelsOption("");
 	}
-
 	KEI::TPlot::drawPlot(canvas, hist, config);
+	if ( config.getTitle() == "DEPOSIT_POSITION_SLICE" ) {
+		TF1* func = new TF1("func", "[0]*x+[1]", -14, 3);
+		hist->Fit(func, "R");
+		func->Draw("SAME");
+	}
 	KEI::TPlot::saveLegend(canvas, legend);
 	KEI::TPlot::saveCanvas(canvas, mOutputPath, config);
 }

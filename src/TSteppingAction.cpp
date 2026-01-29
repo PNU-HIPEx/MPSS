@@ -9,7 +9,10 @@
 #include "TEventAction.hpp"
 #include "TTrackingAction.hpp"
 
-TSteppingAction::TSteppingAction(TEventAction* eventAction, TTrackingAction* trackingAction) : G4UserSteppingAction(), fEventAction(eventAction), fTrackingAction(trackingAction) { }
+// TSteppingAction의 생성자
+// G4UserSteppingAction의 
+TSteppingAction::TSteppingAction(TEventAction* eventAction, TTrackingAction* trackingAction)
+	: G4UserSteppingAction(), fEventAction(eventAction), fTrackingAction(trackingAction) { }
 
 void TSteppingAction::UserSteppingAction(const G4Step* step) {
 	G4Track* track = step->GetTrack();
@@ -27,13 +30,17 @@ void TSteppingAction::UserSteppingAction(const G4Step* step) {
 		// Accumulate energy deposit per track when inside detector
 		const G4double edep = step->GetTotalEnergyDeposit();
 		if ( edep > 0.0 ) {
-			fTrackingAction->addEnergyDeposit(edep, step->GetPreStepPoint()->GetPosition().x(), step->GetPreStepPoint()->GetPosition().y(), step->GetPreStepPoint()->GetPosition().z());
+			fTrackingAction->addEnergyDeposit(edep, step->GetPostStepPoint()->GetPosition().x(),
+											  step->GetPostStepPoint()->GetPosition().y(),
+											  step->GetPostStepPoint()->GetPosition().z());
 		}
 	}
 }
 
 void TSteppingAction::setDetectors() {
-	const TDetectorConstruction* detectorConstruction = static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+	const TDetectorConstruction* detectorConstruction =
+		static_cast<const TDetectorConstruction*>(G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+
 	if ( mWorldLogical == nullptr ) {
 		mWorldLogical = detectorConstruction->getWorldLogical();
 	}

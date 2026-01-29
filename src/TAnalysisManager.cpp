@@ -110,6 +110,7 @@ void TAnalysisManager::extractData() {
 
 		Double_t energyDeposit = 0.;
 		tree->SetBranchAddress("Deposited_energy", &energyDeposit);
+		std::array<Double_t, 2> sliceRange = mConfig.getConfig("DEPOSIT_POSITION_SLICE").getValue<Double_t, 2>("RANGE");
 
 		Long64_t nEntries = tree->GetEntries();
 		std::cout << "Processing " << nEntries << " entries..." << std::endl;
@@ -137,6 +138,10 @@ void TAnalysisManager::extractData() {
 				if ( isDraw("INCIDENT_POSITION_Z_DEPOSIT") ) mHistogram1D["INCIDENT_POSITION_Z_DEPOSIT"]->Fill(incidentZ);
 				if ( isDraw("ENERGY_DEPOSIT") ) mHistogram1D["ENERGY_DEPOSIT"]->Fill(energyDeposit);
 				if ( isDraw("DEPOSIT_POSITION_XY") ) mHistogram2D["DEPOSIT_POSITION_XY"]->Fill(depositX, depositY);
+				if ( isDraw("DEPOSIT_POSITION_SLICE") && sliceRange[0] * 0.027 < depositY && depositY < sliceRange[1] * 0.027 ) {
+					mHistogram1D["DEPOSIT_POSITION_SLICE"]->Fill(depositX);
+				}
+
 			}
 		}
 		ProgressBar::destroyGlobal();
