@@ -77,7 +77,6 @@ void TPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 	double selectedEnergy = G4RandGauss::shoot(mEnergy[index].energy, mEnergy[index].energyUncertainty);
 
 	fParticleGun->SetParticleEnergy(selectedEnergy * keV);
-
 	// Big Source(u, up)
 	// position randomize
 
