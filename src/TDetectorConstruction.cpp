@@ -222,8 +222,8 @@ void TDetectorConstruction::getDetector() {
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
 	G4ThreeVector pos_detector(0 * mm, 0 * mm, -(6.5 + 2 + 12) * mm);
-
-	mDetector = new G4PVPlacement(nullptr, pos_detector, mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
+	G4RotationMatrix* rot_detector = new G4RotationMatrix(45 * deg, 0, 0);
+	mDetector = new G4PVPlacement(rot_detector, pos_detector, mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 
 	G4Region* ALPIDERegion = new G4Region("ALPIDERegion");
 	mDetectorLogical->SetRegion(ALPIDERegion);

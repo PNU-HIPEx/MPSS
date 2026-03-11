@@ -12,40 +12,23 @@ const std::filesystem::path dataDir = DATA_DIR;
 TAnalysisManager::TAnalysisManager(const KEI::TConfigFile& config) : mConfig(config) {
 	mInputFilePath = dataDir / mConfig.getConfig("FILE").getValue<std::string>("INPUT_FILE");
 	mPlotList = config.getConfigTitleSet();
-	std::cout << "Looking for input files with pattern: " << mInputFilePath << std::endl;
 
-	if ( std::filesystem::exists(mInputFilePath.parent_path() / (std::string(mInputFilePath.stem()) + "_t0.root")) ) {
-		int iFile = 0;
-		while ( true ) {
-			std::filesystem::path tempPath = mInputFilePath.parent_path() / (std::string(mInputFilePath.stem()) + "_t" + std::to_string(iFile) + ".root");
-			if ( std::filesystem::exists(tempPath) ) {
-				std::cout << "Found file: " << tempPath << std::endl;
-				TFile* file = new TFile(static_cast<TString>(tempPath.string()), "READ");
-				if ( file && !file->IsZombie() ) {
-					mInputFileList.push_back(file);
-				} else {
-					std::cerr << "Error opening file: " << tempPath << std::endl;
-					delete file;
-				}
-				iFile++;
-			} else {
-				break;
-			}
-		}
-		std::cout << "Total files loaded: " << mInputFileList.size() << std::endl;
-	} else {
-		std::cout << "No multithreaded files found, trying single file..." << std::endl;
-		if ( std::filesystem::exists(mInputFilePath) ) {
-			TFile* file = new TFile(static_cast<TString>(mInputFilePath.string()), "READ");
-			if ( file && !file->IsZombie() ) {
+	int nRun = mConfig.getConfig("FILE").hasKey("RUN_NUM") ? mConfig.getConfig("FILE").getValue<int>("RUN_NUM") : 1;
+	int nThread = mConfig.getConfig("FILE").hasKey("THREAD_NUM") ? mConfig.getConfig("FILE").getValue<int>("THREAD_NUM") : 0;
+	if ( nThread != 0 ) {
+		for ( int iRun = 0; iRun < nRun; iRun++ ) {
+			for ( int iThread = 0; iThread < nThread; iThread++ ) {
+				std::filesystem::path path = mInputFilePath.parent_path() / (std::string(mInputFilePath.stem()) + "_Run" + std::to_string(iRun) + "_t" + std::to_string(iThread) + ".root");
+				TFile* file = new TFile(static_cast<TString>(path.string()), "READ");
 				mInputFileList.push_back(file);
-				std::cout << "Loaded single file: " << mInputFilePath << std::endl;
 			}
 		}
-	}
-
-	if ( mInputFileList.empty() ) {
-		std::cerr << "Error: No input files found!" << std::endl;
+	} else {
+		for ( int iRun = 0; iRun < nRun; iRun++ ) {
+			std::filesystem::path path = mInputFilePath.parent_path() / (std::string(mInputFilePath.stem()) + "_Run" + std::to_string(iRun) + ".root");
+			TFile* file = new TFile(static_cast<TString>(path.string()), "READ");
+			mInputFileList.push_back(file);
+		}
 	}
 }
 
@@ -111,9 +94,9 @@ void TAnalysisManager::extractData() {
 		Double_t energyDeposit = 0.;
 		tree->SetBranchAddress("Deposited_energy", &energyDeposit);
 		std::array<Double_t, 2> sliceRange = mConfig.getConfig("DEPOSIT_POSITION_SLICE").getValue<Double_t, 2>("RANGE");
+		std::array<Double_t, 2> sliceRangeY = mConfig.getConfig("DEPOSIT_POSITION_SLICE_Y").getValue<Double_t, 2>("RANGE");
 
 		Long64_t nEntries = tree->GetEntries();
-		std::cout << "Processing " << nEntries << " entries..." << std::endl;
 		ProgressBar::createGlobal(nEntries);
 		for ( Long64_t iEntry = 0; iEntry < nEntries; ++iEntry ) {
 			ProgressBar::incrementGlobal();
@@ -141,12 +124,15 @@ void TAnalysisManager::extractData() {
 				if ( isDraw("DEPOSIT_POSITION_SLICE") && sliceRange[0] * 0.027 < depositY && depositY < sliceRange[1] * 0.027 ) {
 					mHistogram1D["DEPOSIT_POSITION_SLICE"]->Fill(depositX);
 				}
+				if ( isDraw("DEPOSIT_POSITION_SLICE_Y") && sliceRangeY[0] * 0.029 < depositX && depositX < sliceRangeY[1] * 0.029 ) {
+					mHistogram1D["DEPOSIT_POSITION_SLICE_Y"]->Fill(depositY);
+				}
 
 			}
 		}
 		ProgressBar::destroyGlobal();
 
-		std::cout << "Processed " << nEntries << " entries from file" << std::endl;
+		std::cout << "Processed " << nEntries << " entries from file \"" << inputFile->GetName() << "\"" << std::endl;
 	}
 }
 bool TAnalysisManager::isDraw(std::string_view plotName) {

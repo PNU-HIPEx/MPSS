@@ -68,6 +68,8 @@ endif()
 # Set for doxygen for documentation
 option(BUILD_DOC "Build documentation" OFF)
 
+option(FILESYSTEM "Enable filesystem support" ON)
+
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   set(BUILDINSOURCE true)
 endif()
@@ -91,7 +93,11 @@ foreach(HEADER_PATH ${HEADERS})
     get_filename_component(DIR ${HEADER_PATH} DIRECTORY)
     target_include_directories(myProject PRIVATE ${DIR})
 endforeach()
-
+if(FILESYSTEM)
+	target_compile_definitions(myProject PRIVATE FILESYSTEM)
+else()
+	target_compile_definitions(myProject PRIVATE NO_FILESYSTEM)
+endif()
 # Add ROOT and Geant4 include files
 include(${Geant4_USE_FILE})
 include_directories(${Geant4_INCLUDE_DIRS})

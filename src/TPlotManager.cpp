@@ -79,7 +79,9 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 	}
 	KEI::TPlot::drawPlot(canvas, hist, config);
 	if ( config.getTitle() == "DEPOSIT_POSITION_SLICE" ) {
-		TF1* func = new TF1("func", "[0]*x+[1]", -14, 3);
+		// TF1* func = new TF1("func", "[0]*x+[1]", -14, 3);
+		TF1* func = new TF1("f1", "[0] * exp( - pow((x - [1])/[2],2 * [3]))+ [4]", -4, 4);
+		func->SetParameters(hist->GetMaximum(), 0, 2.6, 2, 100);
 		hist->Fit(func, "R");
 		func->Draw("SAME");
 	}

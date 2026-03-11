@@ -40,11 +40,12 @@ int main(int argc, char** argv) {
 
 	// 몬테 카를로 시뮬레이션을 위한 랜덤 엔진 설정
 	// CLHEP 라이브러리의 RanecuEngine을 사용하여 랜덤 엔진을 초기화합니다.
-	long randomSeedNum = config.getConfig("CONFIG").getValue<long>("RANDOM_SEED");
 	CLHEP::RanecuEngine* RandomEngine = new CLHEP::RanecuEngine;
-	G4Random::setTheEngine(RandomEngine);
-	G4Random::setTheSeed(randomSeedNum);
-
+	if ( config.getConfig("CONFIG").hasKey("RANDOM_SEED") ) {
+		long randomSeedNum = config.getConfig("CONFIG").getValue<long>("RANDOM_SEED");
+		G4Random::setTheEngine(RandomEngine);
+		G4Random::setTheSeed(randomSeedNum);
+	}
 	// G4RunManager를 생성
 	G4MTRunManager* runManager = new G4MTRunManager;
 
@@ -90,9 +91,18 @@ int main(int argc, char** argv) {
 		uiManager->ApplyCommand("/run/verbose " + std::to_string(verboseLevels[1]));
 		uiManager->ApplyCommand("/event/verbose " + std::to_string(verboseLevels[2]));
 		uiManager->ApplyCommand("/tracking/verbose " + std::to_string(verboseLevels[3]));
-
-		int activity = config.getConfig("ENVIRONMENT").getValue<int>("ACTIVITY");
-		uiManager->ApplyCommand("/run/beamOn " + std::to_string(activity));
+		std::string activity = config.getConfig("ENVIRONMENT").getValue<std::string>("ACTIVITY");
+		if ( activity.length() < 10 ) {
+			uiManager->ApplyCommand("/run/beamOn " + activity);
+		} else {
+			long long activityNum = config.getConfig("ENVIRONMENT").getValue<long long>("ACTIVITY");
+			int nRun = activityNum / 100000000;
+			int nFinalActivity = activityNum % 100000000;
+			for ( int iRun = 0; iRun < nRun; iRun++ ) {
+				uiManager->ApplyCommand("/run/beamOn 100000000");
+			}
+			uiManager->ApplyCommand("/run/beamOn " + std::to_string(nFinalActivity));
+		}
 	}
 
 	delete runManager;
