@@ -3,6 +3,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TH1.h"
+#include "TH3.h"
 #include "TKey.h"
 #include "TObject.h"
 #include "TCanvas.h"
@@ -34,6 +35,8 @@ TPlotManager::TPlotManager(const KEI::TConfigFile& config) : mConfig(config) {
 				DrawTH2D(obj, mConfig.getConfig(obj->GetName()));
 			} else if ( className == "TH1D" ) {
 				DrawTH1D(obj, mConfig.getConfig(obj->GetName()));
+			} else if ( className == "TH3D" ) {
+				DrawTH3D(obj, mConfig.getConfig(obj->GetName()));
 			}
 		}
 	}
@@ -71,7 +74,7 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 	legend->AddEntry((TObject*)nullptr, Form("StdDev X: %.3f", hist->GetStdDev()), "");
 
 	if ( config.getTitle() == "INCIDENT_PARTICLE" ) {
-		std::vector<TString> labels = {"#alpha", "#gamma", "e^{-}", "Other"};
+		std::vector<TString> labels = {"#alpha", "e^{-}", "#gamma", "Other"};
 		for ( size_t i = 0; i < labels.size(); i++ ) {
 			hist->GetXaxis()->SetBinLabel(i + 1, labels[i]);
 		}
@@ -85,6 +88,24 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 		hist->Fit(func, "R");
 		func->Draw("SAME");
 	}
+	KEI::TPlot::saveLegend(canvas, legend);
+	KEI::TPlot::saveCanvas(canvas, mOutputPath, config);
+}
+
+void TPlotManager::DrawTH3D(TObject* obj, const KEI::TConfig& config) {
+	TH3D* hist = static_cast<TH3D*>(obj);
+	TCanvas* canvas = KEI::TPlot::initCanvas(config);
+	TLegend* legend = KEI::TPlot::initLegend(config);
+
+	legend->SetMargin(0.1);
+	legend->SetTextAlign(12);
+
+	legend->AddEntry((TObject*)nullptr, Form("Entry: %.0f", hist->GetEffectiveEntries()), "");
+	legend->AddEntry((TObject*)nullptr, Form("Mean X: %.3f", hist->GetMean()), "");
+	legend->AddEntry((TObject*)nullptr, Form("StdDev X: %.3f", hist->GetStdDev()), "");
+
+	KEI::TPlot::drawPlot(canvas, hist, config);
+
 	KEI::TPlot::saveLegend(canvas, legend);
 	KEI::TPlot::saveCanvas(canvas, mOutputPath, config);
 }

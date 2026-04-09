@@ -20,6 +20,7 @@ private:
 public:
 	void DrawTH2D(TObject* obj, const KEI::TConfig& config);
 	void DrawTH1D(TObject* obj, const KEI::TConfig& config);
+	void DrawTH3D(TObject* obj, const KEI::TConfig& config);
 
 };
 

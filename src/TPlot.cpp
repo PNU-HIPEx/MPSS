@@ -6,7 +6,9 @@
 #include "TLegend.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TF1.h"
+#include "TView.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TGraph.h"
@@ -106,6 +108,20 @@ TH2* KEI::TPlot::init2DHist(const KEI::TConfig& config) {
 	return hist;
 }
 
+TH3* KEI::TPlot::init3DHist(const KEI::TConfig& config) {
+	static int i3DHist = 0;
+	std::string histName = config.hasKey("NAME") ? config.getValue<std::string>("NAME") : Form("hist3D_%d", i3DHist);
+	std::array<double, 9> bins = {100, 0, 100, 100, 0, 100, 100, 0, 100};
+	TH3* hist;
+	if ( config.hasKey("BIN") ) {
+		bins = config.getValue<double, 9>("BIN");
+	}
+	hist = new TH3D(static_cast<TString>(histName), "", bins[0], bins[1], bins[2], bins[3], bins[4], bins[5], bins[6], bins[7], bins[8]);
+	i3DHist++;
+
+	return hist;
+}
+
 // Initialize a function with the given configuration
 // The function parameters are determined by the "FUNCTION" key in the configuration (default: {"x", "1"})
 TF1* KEI::TPlot::initFunction(const KEI::TConfig& config) {
@@ -179,6 +195,28 @@ void KEI::TPlot::drawPlot(TCanvas* canvas, TH2* plot, const KEI::TConfig& config
 
 	canvas->cd();
 	plot->Draw("COLZ");
+	return;
+}
+
+void KEI::TPlot::drawPlot(TCanvas* canvas, TH3* plot, const KEI::TConfig& config) {
+	if ( canvas == nullptr || plot == nullptr ) {
+		return;
+	}
+
+	canvas->cd();
+
+	plot->Draw("BOX");  // 3D 히스토그램을 BOX 스타일로 그림
+
+	// 뷰 각도 조정
+	if ( config.hasKey("VIEW_PHI") || config.hasKey("VIEW_THETA") ) {
+		canvas->Update();
+		TView* view = canvas->GetView();
+		double phi = config.hasKey("VIEW_PHI") ? config.getValue<double>("VIEW_PHI") : view->GetLongitude();
+		double theta = config.hasKey("VIEW_THETA") ? config.getValue<double>("VIEW_THETA") : view->GetLatitude();
+
+		view->RotateView(phi, theta, 0);  // psi는 0으로 설정
+	}
+
 	return;
 }
 

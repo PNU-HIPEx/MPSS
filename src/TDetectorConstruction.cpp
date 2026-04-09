@@ -29,6 +29,7 @@ TDetectorConstruction::TDetectorConstruction(const KEI::TConfigFile& config) : G
 	mAirPressure = config.getConfig("ENVIRONMENT").hasKey("AIR_PRESSURE") ? config.getConfig("ENVIRONMENT").getValue<double>("AIR_PRESSURE") : 1.;
 	mCollimatorSide = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_SIDE") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_SIDE") : 4.;
 	mCollimatorUpper = config.getConfig("ENVIRONMENT").hasKey("COLLIMATOR_UPPER") ? config.getConfig("ENVIRONMENT").getValue<double>("COLLIMATOR_UPPER") : 3.;
+	mDetectorRotation = config.getConfig("ENVIRONMENT").hasKey("DETECTOR_ROTATION") ? config.getConfig("ENVIRONMENT").getValue<double, 3>("DETECTOR_ROTATION") : std::array<double, 3>{0, 0, 0};
 }
 
 void TDetectorConstruction::getCollimatorMaterial() {
@@ -222,7 +223,7 @@ void TDetectorConstruction::getDetector() {
 	mDetectorLogical->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
 	G4ThreeVector pos_detector(0 * mm, 0 * mm, -(6.5 + 2 + 12) * mm);
-	G4RotationMatrix* rot_detector = new G4RotationMatrix(45 * deg, 0, 0);
+	G4RotationMatrix* rot_detector = new G4RotationMatrix(mDetectorRotation[0] * deg, mDetectorRotation[1] * deg, mDetectorRotation[2] * deg);
 	mDetector = new G4PVPlacement(rot_detector, pos_detector, mDetectorLogical, "ALPIDE", mWorldLogical, false, 0, true);
 
 	G4Region* ALPIDERegion = new G4Region("ALPIDERegion");

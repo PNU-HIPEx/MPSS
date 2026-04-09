@@ -3,7 +3,8 @@
 #include "TROOT.h"
 #include "cpptqdm.h"
 #include "TPlot.hpp"
-
+#include "TRotation.h"
+#include "TVector3.h"
 #include "config.hpp"
 #include <iostream>
 
@@ -62,6 +63,9 @@ void TAnalysisManager::initHistograms() {
 			} else if ( mConfig.getConfig(plot).getValue<std::string>("TYPE") == "1H" ) {
 				TH1* hist = KEI::TPlot::init1DHist(mConfig.getConfig(plot));
 				mHistogram1D.insert({plot, hist});
+			} else if ( mConfig.getConfig(plot).getValue<std::string>("TYPE") == "3H" ) {
+				TH3* hist = KEI::TPlot::init3DHist(mConfig.getConfig(plot));
+				mHistogram3D.insert({plot, hist});
 			}
 		}
 
@@ -101,17 +105,29 @@ void TAnalysisManager::extractData() {
 		for ( Long64_t iEntry = 0; iEntry < nEntries; ++iEntry ) {
 			ProgressBar::incrementGlobal();
 			tree->GetEntry(iEntry);
-			if ( isDraw("INCIDENT_POSITION_XY") ) mHistogram2D["INCIDENT_POSITION_XY"]->Fill(incidentX, incidentY);
+
+			std::array<double, 3> detectorRotation = mConfig.getConfig("INCIDENT_POSITION_XYZ").hasKey("DETECTOR_ROTATION") ? mConfig.getConfig("INCIDENT_POSITION_XYZ").getValue<double, 3>("DETECTOR_ROTATION") : std::array<double, 3>{0., 0., 0.};
+			std::array<double, 3> detectorPosition = mConfig.getConfig("INCIDENT_POSITION_XYZ").hasKey("DETECTOR_POSITION") ? mConfig.getConfig("INCIDENT_POSITION_XYZ").getValue<double, 3>("DETECTOR_POSITION") : std::array<double, 3>{0., 0., 0.};
+			TRotation rot;
+			rot.RotateX(-detectorRotation[0] * 3.141592 / 180.);
+			rot.RotateY(-detectorRotation[1] * 3.141592 / 180.);
+			rot.RotateZ(-detectorRotation[2] * 3.141592 / 180.);
+			TVector3 incidentPosition(incidentX - detectorPosition[0], incidentY - detectorPosition[1], incidentZ - detectorPosition[2]);
+			incidentPosition = rot * incidentPosition;
+
+			if ( isDraw("INCIDENT_POSITION_XY") ) mHistogram2D["INCIDENT_POSITION_XY"]->Fill(incidentPosition[0], incidentPosition[1]);
+			if ( isDraw("INCIDENT_POSITION_XYZ") ) mHistogram3D["INCIDENT_POSITION_XYZ"]->Fill(incidentPosition[0], incidentPosition[1], incidentPosition[2]);
+			if ( isDraw("INCIDENT_POSITION_Z") ) mHistogram1D["INCIDENT_POSITION_Z"]->Fill(incidentZ);
 			if ( isDraw("EVENT_ID") ) mHistogram1D["EVENT_ID"]->Fill(eventID);
 			if ( isDraw("TRACK_ID") ) mHistogram1D["TRACK_ID"]->Fill(trackID);
 			if ( isDraw("PARENT_ID") ) mHistogram1D["PARENT_ID"]->Fill(parentID);
 			if ( isDraw("INCIDENT_PARTICLE") ) {
-				if ( particleID == 1000020040 ) {
+				if ( particleID == 1000020040 ) { // Alpha particle
 					mHistogram1D["INCIDENT_PARTICLE"]->Fill(0);
 				} else if ( particleID == 11 ) {
 					mHistogram1D["INCIDENT_PARTICLE"]->Fill(1);
 				} else if ( particleID == 22 ) {
-					mHistogram1D["INCIDENT_PARTICLE"]->Fill(1);
+					mHistogram1D["INCIDENT_PARTICLE"]->Fill(2);
 				} else {
 					std::cout << particleID << std::endl;
 				}
@@ -121,11 +137,11 @@ void TAnalysisManager::extractData() {
 				if ( isDraw("INCIDENT_POSITION_Z_DEPOSIT") ) mHistogram1D["INCIDENT_POSITION_Z_DEPOSIT"]->Fill(incidentZ);
 				if ( isDraw("ENERGY_DEPOSIT") ) mHistogram1D["ENERGY_DEPOSIT"]->Fill(energyDeposit);
 				if ( isDraw("DEPOSIT_POSITION_XY") ) mHistogram2D["DEPOSIT_POSITION_XY"]->Fill(depositX, depositY);
-				if ( isDraw("DEPOSIT_POSITION_SLICE") && sliceRange[0] * 0.027 < depositY && depositY < sliceRange[1] * 0.027 ) {
-					mHistogram1D["DEPOSIT_POSITION_SLICE"]->Fill(depositX);
+				if ( isDraw("DEPOSIT_POSITION_SLICE") && sliceRange[0] * 0.027 < incidentPosition[1] && incidentPosition[1] < sliceRange[1] * 0.027 ) {
+					mHistogram1D["DEPOSIT_POSITION_SLICE"]->Fill(incidentPosition[0]);
 				}
-				if ( isDraw("DEPOSIT_POSITION_SLICE_Y") && sliceRangeY[0] * 0.029 < depositX && depositX < sliceRangeY[1] * 0.029 ) {
-					mHistogram1D["DEPOSIT_POSITION_SLICE_Y"]->Fill(depositY);
+				if ( isDraw("DEPOSIT_POSITION_SLICE_Y") && sliceRangeY[0] * 0.029 < incidentPosition[0] && incidentPosition[0] < sliceRangeY[1] * 0.029 ) {
+					mHistogram1D["DEPOSIT_POSITION_SLICE_Y"]->Fill(incidentPosition[1]);
 				}
 
 			}
@@ -169,6 +185,14 @@ void TAnalysisManager::savePlots() {
 	}
 
 	for ( const auto& histPair : mHistogram2D ) {  // const auto& 사용
+		if ( histPair.second ) {  // null 포인터 확인
+			histPair.second->Write();
+		} else {
+			std::cerr << "Warning: Null histogram for " << histPair.first << std::endl;
+		}
+	}
+
+	for ( const auto& histPair : mHistogram3D ) {  // const auto& 사용
 		if ( histPair.second ) {  // null 포인터 확인
 			histPair.second->Write();
 		} else {

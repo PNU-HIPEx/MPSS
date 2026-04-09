@@ -10,6 +10,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 
 #include "TConfig.hpp"
 
@@ -29,6 +30,7 @@ private:
 
 	std::unordered_map<std::string, TH1*> mHistogram1D;
 	std::unordered_map<std::string, TH2*> mHistogram2D;
+	std::unordered_map<std::string, TH3*> mHistogram3D;
 private:
 	bool isDraw(std::string_view plotName);
 };

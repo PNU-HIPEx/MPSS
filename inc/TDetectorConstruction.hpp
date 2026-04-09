@@ -19,6 +19,7 @@ private:
 	G4NistManager* mNist;
 
 	G4double mAirPressure = 1.;
+	std::array<G4double, 3> mDetectorRotation = {0, 0, 0};
 	G4Material* mCollimatorMaterial;
 	G4Material* mPE;
 	G4double mCollimatorSide = 4.;
