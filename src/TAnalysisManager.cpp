@@ -143,6 +143,17 @@ void TAnalysisManager::extractData() {
 				if ( isDraw("DEPOSIT_POSITION_SLICE_Y") && sliceRangeY[0] * 0.029 < incidentPosition[0] && incidentPosition[0] < sliceRangeY[1] * 0.029 ) {
 					mHistogram1D["DEPOSIT_POSITION_SLICE_Y"]->Fill(incidentPosition[1]);
 				}
+				if ( isDraw("DEPOSIT_PARTICLE") ) {
+					if ( particleID == 1000020040 ) { // Alpha particle
+						mHistogram1D["DEPOSIT_PARTICLE"]->Fill(0);
+					} else if ( particleID == 11 ) {
+						mHistogram1D["DEPOSIT_PARTICLE"]->Fill(1);
+					} else if ( particleID == 22 ) {
+						mHistogram1D["DEPOSIT_PARTICLE"]->Fill(2);
+					} else {
+						std::cout << particleID << std::endl;
+					}
+				}
 
 			}
 		}

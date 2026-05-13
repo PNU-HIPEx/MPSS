@@ -19,12 +19,15 @@
 #include "cppargs.hpp"
 
 const std::filesystem::path sourcePath = SOURCE_DIR;
+const std::filesystem::path dataPath = DATA_DIR;
 const std::string configFilePath = sourcePath / "config/simulation.conf";
 
 ArgumentParser set_parse(int argc, char** argv) {
 	ArgumentParser parser = ArgumentParser(argc, argv).setDescription("Drawing experiment plots");
 	parser.add_argument("--vis").set_default("false").help("Visulaization option").add_finish();
 	parser.add_argument("--threads").set_default("4").help("Number of threads for Geant4 MT").add_finish();
+	parser.add_argument("--sc").set_default("true").help("Save configuration in output folder").add_finish();
+	parser.add_argument("--config").set_default(configFilePath).help("Config file").add_finish();
 
 	parser.parse_args();
 
@@ -36,16 +39,29 @@ int main(int argc, char** argv) {
 	// 인자 파싱
 	ArgumentParser parser = set_parse(argc, argv);
 	// 컨피그 파일 열기
-	KEI::TConfigFile config(configFilePath);
+	// KEI::TConfigFile config(configFilePath);
+	KEI::TConfigFile config(parser.get_value<std::string>("config"));
+
+	if ( parser.get_value<bool>("sc") ) {
+		std::filesystem::path configOutputPath = (dataPath /
+												  config.getConfig("FILE").getValue<std::string>("OUTPUT_FILE")).parent_path();
+		std::filesystem::create_directories(configOutputPath);
+		std::filesystem::copy(configFilePath, configOutputPath / "Config.cpp", std::filesystem::copy_options::overwrite_existing);
+	}
 
 	// 몬테 카를로 시뮬레이션을 위한 랜덤 엔진 설정
 	// CLHEP 라이브러리의 RanecuEngine을 사용하여 랜덤 엔진을 초기화합니다.
 	CLHEP::RanecuEngine* RandomEngine = new CLHEP::RanecuEngine;
+	long randomSeedNum = 0;
 	if ( config.getConfig("CONFIG").hasKey("RANDOM_SEED") ) {
-		long randomSeedNum = config.getConfig("CONFIG").getValue<long>("RANDOM_SEED");
-		G4Random::setTheEngine(RandomEngine);
-		G4Random::setTheSeed(randomSeedNum);
+		randomSeedNum = config.getConfig("CONFIG").getValue<long>("RANDOM_SEED");
+	} else {
+		randomSeedNum = static_cast<long>((std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch())).count());
 	}
+	std::clog << "Seed Number: " << randomSeedNum << std::endl;
+	G4Random::setTheEngine(RandomEngine);
+	G4Random::setTheSeed(randomSeedNum);
+
 	// G4RunManager를 생성
 	G4MTRunManager* runManager = new G4MTRunManager;
 

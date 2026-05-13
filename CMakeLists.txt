@@ -40,6 +40,15 @@ else()
   find_package(Geant4 REQUIRED)
 endif()
 
+# Geant4 publishes many indirect shared-library dependencies. On Linux,
+# emitting DT_RPATH instead of DT_RUNPATH keeps those transitive lookups
+# working even when the shell has not sourced geant4.sh/thisroot.sh.
+if(UNIX AND NOT APPLE)
+  add_link_options(-Wl,--disable-new-dtags)
+  set(CMAKE_BUILD_RPATH_USE_ORIGIN FALSE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
 # set C++ standard ensuring compatibility with ROOT
 set(CMAKE_CXX_STANDARD 17)
 if(ROOT_cxx17_FOUND)

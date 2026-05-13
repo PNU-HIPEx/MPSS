@@ -6,3 +6,4 @@ build/
 *.out
 inc/config.hpp
 *.tar.gz
+config/gamma

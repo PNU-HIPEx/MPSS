@@ -1,14 +1,14 @@
-# HTCondor submit file that builds MPSS on the execute node, then runs it.
+# HTCondor submit file that transfers and runs the prebuilt MPSS binary.
 universe = vanilla
-executable = build_and_run.sh
+executable = build/MPSS.out
 transfer_executable = true
 should_transfer_files = YES
 
-# Transfer the source tarball and wrapper script to the execute node.
-transfer_input_files = MPSS-source.tar.gz, build_and_run.sh
+# Transfer runtime inputs used by the executable.
+transfer_input_files = config/simulation.conf, config/AM241_ALPHA.csv, config/AM241_GAMMA.csv, init_vis.mac, vis.mac
 
 arguments = --threads 10
-environment = "BUILD_JOBS=1 NAS_SYNC_DIR=/mnt/condor_data JOB_TAG=$(Cluster).$(Process)"
+environment = "JOB_TAG=$(Cluster).$(Process) LD_LIBRARY_PATH=/opt/geant4/lib:/opt/root/lib"
 
 request_cpus = 1
 request_memory = 4096

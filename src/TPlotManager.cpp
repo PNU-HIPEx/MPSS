@@ -73,7 +73,7 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 	legend->AddEntry((TObject*)nullptr, Form("Mean X: %.3f", hist->GetMean()), "");
 	legend->AddEntry((TObject*)nullptr, Form("StdDev X: %.3f", hist->GetStdDev()), "");
 
-	if ( config.getTitle() == "INCIDENT_PARTICLE" ) {
+	if ( config.getTitle() == "INCIDENT_PARTICLE" || config.getTitle() == "DEPOSIT_PARTICLE" ) {
 		std::vector<TString> labels = {"#alpha", "e^{-}", "#gamma", "Other"};
 		for ( size_t i = 0; i < labels.size(); i++ ) {
 			hist->GetXaxis()->SetBinLabel(i + 1, labels[i]);
@@ -83,10 +83,10 @@ void TPlotManager::DrawTH1D(TObject* obj, const KEI::TConfig& config) {
 	KEI::TPlot::drawPlot(canvas, hist, config);
 	if ( config.getTitle() == "DEPOSIT_POSITION_SLICE" ) {
 		// TF1* func = new TF1("func", "[0]*x+[1]", -14, 3);
-		TF1* func = new TF1("f1", "[0] * exp( - pow((x - [1])/[2],2 * [3]))+ [4]", -4, 4);
-		func->SetParameters(hist->GetMaximum(), 0, 2.6, 2, 100);
-		hist->Fit(func, "R");
-		func->Draw("SAME");
+		// TF1* func = new TF1("f1", "[0] * exp( - pow((x - [1])/[2],2 * [3]))+ [4]", -4, 4);
+		// func->SetParameters(hist->GetMaximum(), 0, 2.6, 2, 100);
+		// hist->Fit(func, "R");
+		// func->Draw("SAME");
 	}
 	KEI::TPlot::saveLegend(canvas, legend);
 	KEI::TPlot::saveCanvas(canvas, mOutputPath, config);

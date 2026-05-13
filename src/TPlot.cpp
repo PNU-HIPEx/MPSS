@@ -519,6 +519,18 @@ void KEI::TPlot::saveCanvas(TCanvas* canvas, const KEI::TConfig& config) {
 
 	setMargin(canvas, config);
 
+	if ( config.hasKey("CANVAS_FILL_COLOUR") ) {
+		std::array<int, 3> rgb = config.getValue<int, 3>("CANVAS_FILL_COLOUR");
+		int index = TColor::GetFreeColorIndex();
+		new TColor(index, rgb[0] / 255., rgb[1] / 255., rgb[2] / 255.);
+		if ( config.hasKey("CANVAS_FILL_ALPHA") ) {
+			double alpha = config.getValue<double>("CANVAS_FILL_ALPHA");
+			canvas->SetFillColorAlpha(index, alpha);
+		} else {
+			canvas->SetFillColor(index);
+		}
+	}
+
 	if ( config.hasKey("LOG_Z") && config.getValue<bool>("LOG_Z") ) {
 		canvas->SetLogz();
 	} else {
