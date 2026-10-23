@@ -60,6 +60,7 @@ namespace KEI {
 		template<typename T, int N> std::array<T, N> getValue(std::string_view key) const;
 		template<typename T> std::vector<T> getValueVector(std::string_view key) const;
 		bool hasKey(std::string_view key) const;
+		bool hasConfig(std::string_view key) const;
 		TConfig getConfig(std::string_view title) const;
 	private:
 		std::string mTitle;
@@ -264,6 +265,14 @@ namespace KEI {
 	inline bool TConfig::hasKey(std::string_view key) const {
 		for ( const auto& dict : mDictSet ) {
 			if ( dict.getKey() == key ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	inline bool TConfig::hasConfig(std::string_view key) const {
+		for ( const auto& config : mConfigSet ) {
+			if ( config.getTitle() == key ) {
 				return true;
 			}
 		}

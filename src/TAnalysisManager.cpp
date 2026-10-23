@@ -94,6 +94,7 @@ void TAnalysisManager::extractData() {
 		Double_t depositX = 0., depositY = 0.;
 		tree->SetBranchAddress("Deposit_mean_X", &depositX);
 		tree->SetBranchAddress("Deposit_mean_Y", &depositY);
+		std::cout << "???" << std::endl;
 
 		Double_t energyDeposit = 0.;
 		tree->SetBranchAddress("Deposited_energy", &energyDeposit);
@@ -137,7 +138,7 @@ void TAnalysisManager::extractData() {
 				if ( isDraw("INCIDENT_POSITION_Z_DEPOSIT") ) mHistogram1D["INCIDENT_POSITION_Z_DEPOSIT"]->Fill(incidentZ);
 				if ( isDraw("ENERGY_DEPOSIT") ) mHistogram1D["ENERGY_DEPOSIT"]->Fill(energyDeposit);
 				if ( isDraw("DEPOSIT_POSITION_XY") ) mHistogram2D["DEPOSIT_POSITION_XY"]->Fill(depositX, depositY);
-				if ( isDraw("DEPOSIT_POSITION_SLICE") && sliceRange[0] * 0.027 < incidentPosition[1] && incidentPosition[1] < sliceRange[1] * 0.027 ) {
+				if ( isDraw("DEPOSIT_POSITION_SLICE_X") && sliceRange[0] * 0.027 < incidentPosition[1] && incidentPosition[1] < sliceRange[1] * 0.027 ) {
 					mHistogram1D["DEPOSIT_POSITION_SLICE"]->Fill(incidentPosition[0]);
 				}
 				if ( isDraw("DEPOSIT_POSITION_SLICE_Y") && sliceRangeY[0] * 0.029 < incidentPosition[0] && incidentPosition[0] < sliceRangeY[1] * 0.029 ) {

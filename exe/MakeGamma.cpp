@@ -4,9 +4,11 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TCanvas.h"
+#include "TLegend.h"
+#include "TStyle.h"
 
 int main() {
-	std::filesystem::path parentPath = "/mnt/homes/ychoi/MPS/SIMULATION/ANALYSIS/PLA/B3S4/";
+	std::filesystem::path parentPath = "/mnt/homes/ychoi/MPS/PLA/SIMULATION/ANALYSIS/";
 
 	std::filesystem::path UPath = parentPath / "GAMMA_U_OOO.root";
 	std::filesystem::path LPath = parentPath / "GAMMA_L_OOO.root";
@@ -40,9 +42,19 @@ int main() {
 	}
 
 	TCanvas* canvas = new TCanvas("canvas", "", 2000, 1000);
-	ULRPosition->SetTitle("Mean deposit position; Horizontal Axis [mm]; Vertical Axis [mm]");
+	ULRPosition->SetTitle("Mean deposit position of U^{|}#kern[-0.1]{#lower[0.2]{#alpha#gamma}}L^{|}#kern[-0.1]{#lower[0.2]{#alpha#gamma}}R^{|}#kern[-0.1]{#lower[0.2]{#alpha#gamma}} (Simulation); Horizontal Axis [mm]; Vertical Axis [mm]");
 	ULRPosition->Rebin2D(8, 8);
 	ULRPosition->Draw("COLZ0");
+	canvas->SetMargin(.075, .125, .1, .1);
+	gStyle->SetOptStat(0);
+	TLegend* legend = new TLegend(.675, .6, .875, .9);
+	legend->AddEntry((TObject*)nullptr, Form("Entry: %0.f", ULRPosition->GetEffectiveEntries()), "");
+	legend->AddEntry((TObject*)nullptr, Form("Mean X: %.3f", ULRPosition->GetMean(1)), "");
+	legend->AddEntry((TObject*)nullptr, Form("Mean Y: %.3f", ULRPosition->GetMean(2)), "");
+	legend->AddEntry((TObject*)nullptr, Form("StdDev X: %.3f", ULRPosition->GetStdDev(1)), "");
+	legend->AddEntry((TObject*)nullptr, Form("StdDev Y: %.3f", ULRPosition->GetStdDev(2)), "");
+	legend->SetFillColorAlpha(kWhite, .2);
+	legend->Draw("SAME");
 	canvas->SaveAs("Plot/GAMMA_ULR.png");
 
 	TCanvas* canvas2 = new TCanvas("canvas2", "", 2000, 1000);

@@ -18,9 +18,9 @@
 #include "config.hpp"
 #include "cppargs.hpp"
 
-const std::filesystem::path sourcePath = SOURCE_DIR;
+const std::filesystem::path binaryPath = BINARY_DIR;
 const std::filesystem::path dataPath = DATA_DIR;
-const std::string configFilePath = sourcePath / "config/simulation.conf";
+const std::string configFilePath = binaryPath / "config/simulation.conf";
 
 ArgumentParser set_parse(int argc, char** argv) {
 	ArgumentParser parser = ArgumentParser(argc, argv).setDescription("Drawing experiment plots");

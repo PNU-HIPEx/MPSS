@@ -165,6 +165,7 @@ void KEI::TPlot::drawPlot(TCanvas* canvas, TH1* plot, const KEI::TConfig& config
 	setLineWidth(plot, config);
 	setLineColour(plot, config);
 	setLineStyle(plot, config);
+	setRebin(plot, config);
 
 	if ( config.hasKey("Y_RANGE") ) {
 		std::array<double, 2> yRange = config.getValue<double, 2>("Y_RANGE");
@@ -386,7 +387,6 @@ void KEI::TPlot::setAttribute(TH1* plot, const KEI::TConfig& config) {
 		return;
 	}
 	setTitle(plot, config);
-	setRebin(plot, config);
 	if ( config.hasKey("LABEL_SIZE") ) {
 		std::array<double, 2> labelSize = config.getValue<double, 2>("LABEL_SIZE");
 		plot->GetXaxis()->SetLabelSize(labelSize[0]);

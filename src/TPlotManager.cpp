@@ -26,12 +26,17 @@ TPlotManager::TPlotManager(const KEI::TConfigFile& config) : mConfig(config) {
 	mInputFile = new TFile(static_cast<TString>(mInputFilePath), "READ");
 
 	TList* list = mInputFile->GetListOfKeys();
+
+	TH2* depositPosition;
 	for ( int i = 0; i < list->GetSize(); i++ ) {
 		TObject* obj = static_cast<TKey*>(list->At(i))->ReadObj();
 		TString className = obj->ClassName();
 
 		if ( std::find(mPlotList.begin(), mPlotList.end(), obj->GetName()) != mPlotList.end() ) {
 			if ( className == "TH2D" ) {
+				if (obj->GetName() == static_cast<TString>("DEPOSIT_POSITION_XY")) {
+					depositPosition = static_cast<TH2*>(obj->Clone());
+				}
 				DrawTH2D(obj, mConfig.getConfig(obj->GetName()));
 			} else if ( className == "TH1D" ) {
 				DrawTH1D(obj, mConfig.getConfig(obj->GetName()));
@@ -39,6 +44,35 @@ TPlotManager::TPlotManager(const KEI::TConfigFile& config) : mConfig(config) {
 				DrawTH3D(obj, mConfig.getConfig(obj->GetName()));
 			}
 		}
+	}
+
+	if ( mConfig.hasConfig("SLICE_X_COLLECTION") && mConfig.hasConfig("DEPOSIT_POSITION_XY")) {
+		TCanvas* canvas = KEI::TPlot::initCanvas(mConfig.getConfig("SLICE_X_COLLECTION"));
+		TLegend* legend = KEI::TPlot::initLegend(mConfig.getConfig("SLICE_X_COLLECTION"));
+		KEI::TConfig collectionConfig = mConfig.getConfig("SLICE_X_COLLECTION");
+		int nPlot = 0;
+		while(true) {
+			std::string configName = "P" + std::to_string(nPlot);
+			if ( !collectionConfig.hasConfig(configName)) {
+				break;
+			} else {
+				nPlot++;
+			}
+		}
+
+		for ( int i = 0; i < nPlot; i++) {
+			TH1D* collectionPlot = new TH1D(static_cast<TString>("collectionPlot"+ std::to_string(i)), "", 1024, 0, 1024);
+			std::array<int, 2> range = collectionConfig.getConfig("P"+std::to_string(i)).getValue<int,2>("REGION");
+			for ( int y = range[0]; y < range[1]; y++) {
+				for ( int x = 0; x < 1024; x++) {
+					collectionPlot->Fill(x, depositPosition->GetBinContent(x,y));
+				}
+			}
+			legend->AddEntry(collectionPlot, Form("%d < y < %d", range[0], range[1]), "L");
+			KEI::TPlot::drawPlot(canvas, collectionPlot, collectionConfig.getConfig("P"+std::to_string(i)));
+		}
+		KEI::TPlot::saveLegend(canvas, legend);
+		KEI::TPlot::saveCanvas(canvas, mOutputPath, collectionConfig);
 	}
 }
 
